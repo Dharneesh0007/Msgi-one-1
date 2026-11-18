@@ -1,0 +1,53 @@
+name: MSGI One CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend-verification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv package manager
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install dependencies
+        working-directory: services/api
+        run: uv pip install --system -r requirements.txt
+
+      - name: Run Ruff Linting
+        working-directory: services/api
+        run: ruff check src/
+
+      - name: Run Pytest Test Suite
+        working-directory: services/api
+        run: pytest tests/ -v
+
+  mobile-verification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        run: npm ci
+
+      - name: TypeScript type checking
+        working-directory: apps/mobile
+        run: npx tsc --noEmit
