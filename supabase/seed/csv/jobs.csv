@@ -1,0 +1,4 @@
+job_id,title,company,location,country,opportunity_type,workplace_type,required_skills,deadline_days
+job-ai-010,Machine Learning Platform Intern,Rakuten Symphony,"Tokyo, Japan",Japan,internship,hybrid,"Python;Machine Learning;PyTorch;FastAPI",30
+job-cloud-011,Azure Cloud Solutions Architect,Microsoft,"Bengaluru, India",India,full_time,hybrid,"Cloud Architecture;Azure;Python;Kubernetes",45
+job-robotics-012,Autonomous Robotics Intern,Stealth Robotics,"San Francisco, USA",United States,internship,onsite,"ROS 2;Embedded C++;Computer Vision;Python",15

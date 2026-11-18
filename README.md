@@ -82,13 +82,26 @@ npx expo start --android
 cd services/api
 uv run --offline --no-sync pytest tests/ -v
 
-# Full Phase 1 Verification Suite
+# Full System Verification Suites
 python scripts/verify_phase_1.py
+python scripts/verify_phase_2.py
+
+# Data Ingestion Pipeline (Synthetic Seed Mode)
+python scripts/import_synthetic_data.py --mode demo
 ```
 
 ---
 
 ## 4. Documentation Index
+
+### Phase 2 Business Module Reports
+- [PHASE_2_PRECHECK.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_2_PRECHECK.md)
+- [PHASE_2_IMPLEMENTATION_REPORT.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_2_IMPLEMENTATION_REPORT.md)
+- [PHASE_2_DATABASE_CHANGES.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_2_DATABASE_CHANGES.md)
+- [PHASE_2_API_IMPLEMENTATION.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_2_API_IMPLEMENTATION.md)
+- [PHASE_2_DATA_IMPORT_GUIDE.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_2_DATA_IMPORT_GUIDE.md)
+- [PHASE_2_TEST_RESULTS.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_2_TEST_RESULTS.md)
+- [PHASE_2_INTEGRATION_HANDOFF.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_2_INTEGRATION_HANDOFF.md)
 
 ### Phase 1 Foundation Reports
 - [PHASE_0_CORRECTIONS.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_0_CORRECTIONS.md)

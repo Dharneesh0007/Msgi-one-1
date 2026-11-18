@@ -1,0 +1,5 @@
+user_id,full_name,email,graduation_year,degree,major,company,title,industry,country,city,skills,is_verified,mentor_opt_in
+user-kenji-001,Kenji Sato,kenji.sato@example.msgi.edu,2021,B.Tech,Information Technology,Rakuten Symphony,Staff AI Engineer,Artificial Intelligence,Japan,Tokyo,"Python;Machine Learning;PyTorch;FastAPI",true,true
+user-ananya-002,Ananya Sharma,ananya.sharma@example.msgi.edu,2019,B.Tech,Computer Science,Microsoft,Senior Product Manager,Cloud Computing,India,Bengaluru,"Product Strategy;Cloud Architecture;Azure",true,true
+user-david-003,David Chen,david.chen@example.msgi.edu,2022,B.Tech,Information Technology,Stealth Robotics,Robotics Engineer,Artificial Intelligence,United States,San Francisco,"Python;ROS 2;Embedded C++;Computer Vision",true,false
+user-yuki-004,Yuki Tanaka,yuki.tanaka@example.msgi.edu,2020,B.Tech,Information Technology,Mercari,Tech Lead,E-Commerce,Japan,Tokyo,"Go;TypeScript;Kubernetes;GCP",true,true

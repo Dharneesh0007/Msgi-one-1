@@ -110,3 +110,37 @@ def test_public_user_profile_masks_sensitive_data():
     assert response.data.role == "alumni"
     assert not hasattr(response.data, "email")
     assert not hasattr(response.data, "phone")
+
+
+def test_direct_me_aliases_return_valid_envelope():
+    """Verify that direct /api/v1/me alias handlers function identically to /api/v1/users/me."""
+    from src.main import direct_get_me, direct_patch_me, direct_onboard_me
+
+    user = AuthenticatedUser(
+        id="user-alias-test",
+        email="alias.test@example.msgi.edu",
+        first_name="Aoi",
+        last_name="Takahashi",
+        roles=["student"],
+        is_verified=True,
+    )
+
+    get_res = direct_get_me(current_user=user)
+    assert get_res.status == "success"
+    assert get_res.data.id == "user-alias-test"
+    assert get_res.data.first_name == "Aoi"
+
+    patch_res = direct_patch_me(
+        update_data=UserUpdateRequest(first_name="AoiUpdated"),
+        current_user=user,
+    )
+    assert patch_res.status == "success"
+    assert patch_res.data.first_name == "AoiUpdated"
+
+    onboard_res = direct_onboard_me(
+        onboarding_data=UserOnboardingRequest(first_name="AoiFinal", last_name="Takahashi"),
+        current_user=user,
+    )
+    assert onboard_res.status == "success"
+    assert onboard_res.data.first_name == "AoiFinal"
+

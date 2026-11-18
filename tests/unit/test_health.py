@@ -18,7 +18,7 @@ def test_health_check_returns_success_envelope():
     assert response.data.environment == settings.ENVIRONMENT
     assert response.data.database_status == "configured"
     assert response.data.ai_orchestrator_status == "ready"
-    assert response.meta["phase"] == "Phase 1 — Application Foundation"
+    assert "Phase 2" in response.meta["phase"]
 
 
 def test_root_endpoint_returns_documentation_links():

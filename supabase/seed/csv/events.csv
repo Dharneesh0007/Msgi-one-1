@@ -1,0 +1,4 @@
+event_id,title,event_type,location,is_virtual,meeting_url,start_days_ahead,duration_hours,max_capacity
+event-summit-001,MSGI Annual Global Alumni Summit & Tech Gala,reunion,"Tokyo International Forum",true,https://stream.example.msgi.edu/summit-2026,24,6,500
+event-webinar-002,Deploying Generative AI Models in Production,webinar,"Virtual Interactive Session",true,https://stream.example.msgi.edu/ai-masterclass,7,2,100
+event-workshop-003,Executive Leadership Round Table,workshop,"MSGI Executive Boardroom",false,,12,3,15

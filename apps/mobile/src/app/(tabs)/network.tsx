@@ -1,9 +1,10 @@
 /**
- * MSGI One — Alumni Network Directory Screen (Phase 2 Preview)
- * Complies with FERPA/GDPR privacy: contact details masked; public headline & skills displayed.
+ * MSGI One — Alumni Network Directory Screen
+ * Connects to live backend API: GET /api/v1/alumni
+ * Features: Debounced search, country & skill filters, verified badges, privacy contact masking.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,75 +12,63 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  FlatList,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
+import { api } from '../../lib/api';
+import { AlumniDirectoryItem } from '../../types/business';
 import { Colors, Typography, Spacing, BorderRadius } from '../../constants/theme';
-
-interface AlumniCard {
-  id: string;
-  fullName: string;
-  headline: string;
-  company: string;
-  location: string;
-  skills: string[];
-  isVerified: boolean;
-  graduationYear: number;
-}
-
-const SAMPLE_ALUMNI: AlumniCard[] = [
-  {
-    id: 'alumni-1',
-    fullName: 'Kenji Sato',
-    headline: 'Staff AI Engineer at Rakuten',
-    company: 'Rakuten Symphony',
-    location: 'Tokyo, Japan',
-    skills: ['PyTorch', 'NLP', 'FastAPI', 'Distributed Systems'],
-    isVerified: true,
-    graduationYear: 2021,
-  },
-  {
-    id: 'alumni-2',
-    fullName: 'Ananya Sharma',
-    headline: 'Senior Product Manager at Microsoft',
-    company: 'Microsoft',
-    location: 'Bengaluru, India',
-    skills: ['Cloud Architecture', 'Product Strategy', 'Azure', 'AI Ops'],
-    isVerified: true,
-    graduationYear: 2019,
-  },
-  {
-    id: 'alumni-3',
-    fullName: 'David Chen',
-    headline: 'Founding Engineer at Stealth Robotics',
-    company: 'Stealth Robotics',
-    location: 'San Francisco, USA',
-    skills: ['ROS 2', 'Embedded C++', 'Computer Vision', 'Robotics'],
-    isVerified: true,
-    graduationYear: 2022,
-  },
-];
 
 export default function NetworkScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [alumniList, setAlumniList] = useState<AlumniDirectoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [selectedAlumni, setSelectedAlumni] = useState<AlumniDirectoryItem | null>(null);
 
-  const filterTags = ['All', 'Tokyo', 'Bengaluru', 'San Francisco', 'AI / ML', 'Product'];
+  const filterTags = ['All', 'Japan', 'India', 'United States', 'AI / ML', 'Cloud'];
 
-  const filteredAlumni = SAMPLE_ALUMNI.filter((alumnus) => {
-    const matchesSearch =
-      alumnus.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      alumnus.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      alumnus.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      alumnus.skills.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()));
+  const fetchAlumni = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const params: Record<string, any> = { verified_only: true };
 
-    const matchesTag =
-      !selectedTag ||
-      selectedTag === 'All' ||
-      alumnus.location.includes(selectedTag) ||
-      alumnus.skills.some((s) => s.includes(selectedTag));
+      if (searchQuery.trim()) {
+        params.query = searchQuery.trim();
+      }
 
-    return matchesSearch && matchesTag;
-  });
+      if (selectedTag && selectedTag !== 'All') {
+        if (['Japan', 'India', 'United States'].includes(selectedTag)) {
+          params.country = selectedTag;
+        } else if (selectedTag === 'AI / ML') {
+          params.skill = 'Python';
+        } else if (selectedTag === 'Cloud') {
+          params.skill = 'Cloud Architecture';
+        }
+      }
+
+      const res = await api.searchAlumni(params);
+      setAlumniList(res?.items || []);
+    } catch (err: any) {
+      console.warn('[Network] Failed to fetch alumni:', err.message);
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  }, [searchQuery, selectedTag]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchAlumni();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [fetchAlumni]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchAlumni();
+  };
 
   return (
     <View style={styles.container}>
@@ -117,53 +106,122 @@ export default function NetworkScreen() {
       </View>
 
       {/* Directory List */}
-      <ScrollView contentContainerStyle={styles.listContent}>
-        <View style={styles.phase2Notice}>
-          <Text style={styles.phase2Badge}>PHASE 2 DIRECTORY PREVIEW</Text>
-          <Text style={styles.phase2Text}>
-            Direct messaging, 1-on-1 mentorship scheduling, and pgvector semantic search will be
-            fully enabled in Phase 2.
+      <ScrollView
+        contentContainerStyle={styles.listContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
+      >
+        <View style={styles.privacyBanner}>
+          <Text style={styles.privacyBannerText}>
+            🔒 Institutional Directory: Direct emails and phone numbers are protected under FERPA/GDPR compliance.
           </Text>
         </View>
 
-        {filteredAlumni.map((alumnus) => (
-          <View key={alumnus.id} style={styles.alumniCard}>
-            <View style={styles.cardHeader}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{alumnus.fullName[0]}</Text>
-              </View>
-              <View style={styles.cardInfo}>
-                <View style={styles.nameRow}>
-                  <Text style={styles.nameText}>{alumnus.fullName}</Text>
-                  {alumnus.isVerified && (
-                    <View style={styles.verifiedBadge}>
-                      <Text style={styles.verifiedText}>✓ Verified</Text>
-                    </View>
-                  )}
+        {isLoading && !refreshing ? (
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.loadingText}>Searching verified institutional alumni...</Text>
+          </View>
+        ) : alumniList.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyIcon}>🔍</Text>
+            <Text style={styles.emptyTitle}>No Alumni Matches Found</Text>
+            <Text style={styles.emptySubtitle}>Try adjusting your search filters or tags.</Text>
+          </View>
+        ) : (
+          alumniList.map((alumnus) => (
+            <View key={alumnus.id} style={styles.alumniCard}>
+              <View style={styles.cardHeader}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{alumnus.full_name[0]}</Text>
                 </View>
-                <Text style={styles.headlineText}>{alumnus.headline}</Text>
-                <Text style={styles.locationText}>
-                  📍 {alumnus.location} • Class of {alumnus.graduationYear}
-                </Text>
+                <View style={styles.cardInfo}>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.nameText}>{alumnus.full_name}</Text>
+                    {alumnus.is_verified && (
+                      <View style={styles.verifiedBadge}>
+                        <Text style={styles.verifiedText}>✓ Verified</Text>
+                      </View>
+                    )}
+                    {alumnus.mentor_opt_in && (
+                      <View style={styles.mentorBadge}>
+                        <Text style={styles.mentorText}>Mentor</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.headlineText}>{alumnus.headline}</Text>
+                  <Text style={styles.locationText}>
+                    📍 {alumnus.city ? `${alumnus.city}, ` : ''}{alumnus.country} • Class of {alumnus.graduation_year} ({alumnus.major})
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.skillsRow}>
+                {alumnus.skills.slice(0, 4).map((skill) => (
+                  <View key={skill} style={styles.skillBadge}>
+                    <Text style={styles.skillText}>{skill}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <View style={styles.cardActions}>
+                <TouchableOpacity
+                  style={styles.detailButton}
+                  onPress={() => setSelectedAlumni(alumnus)}
+                >
+                  <Text style={styles.detailButtonText}>View Full Profile</Text>
+                </TouchableOpacity>
               </View>
             </View>
+          ))
+        )}
+      </ScrollView>
 
-            <View style={styles.skillsRow}>
-              {alumnus.skills.map((skill) => (
-                <View key={skill} style={styles.skillBadge}>
-                  <Text style={styles.skillText}>{skill}</Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.cardActions}>
-              <TouchableOpacity style={styles.connectButton}>
-                <Text style={styles.connectButtonText}>View Full Profile</Text>
+      {/* Alumni Detail Modal Sheet */}
+      {selectedAlumni && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{selectedAlumni.full_name}</Text>
+              <TouchableOpacity onPress={() => setSelectedAlumni(null)}>
+                <Text style={styles.modalCloseText}>✕</Text>
               </TouchableOpacity>
             </View>
+
+            <Text style={styles.modalHeadline}>{selectedAlumni.headline}</Text>
+            <Text style={styles.modalMeta}>
+              {selectedAlumni.major} • Class of {selectedAlumni.graduation_year}
+            </Text>
+            <Text style={styles.modalLocation}>
+              📍 {selectedAlumni.city}, {selectedAlumni.country}
+            </Text>
+
+            <View style={styles.modalSection}>
+              <Text style={styles.modalSectionTitle}>Verified Skills</Text>
+              <View style={styles.modalSkillsRow}>
+                {selectedAlumni.skills.map((s) => (
+                  <View key={s} style={styles.skillBadge}>
+                    <Text style={styles.skillText}>{s}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.modalComplianceNotice}>
+              <Text style={styles.modalComplianceText}>
+                Contact details are masked to safeguard alumni privacy. Connect requests can be
+                initiated through MentorMatch or institutional reunion events.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setSelectedAlumni(null)}
+            >
+              <Text style={styles.modalCloseButtonText}>Close Profile</Text>
+            </TouchableOpacity>
           </View>
-        ))}
-      </ScrollView>
+        </View>
+      )}
     </View>
   );
 }
@@ -218,24 +276,45 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     paddingBottom: Spacing.xxl,
   },
-  phase2Notice: {
-    backgroundColor: '#EFF6FF',
+  privacyBanner: {
+    backgroundColor: '#F0FDF4',
     borderWidth: 1,
-    borderColor: '#BFDBFE',
+    borderColor: '#BBF7D0',
     borderRadius: BorderRadius.md,
-    padding: Spacing.md,
+    padding: Spacing.sm,
     marginBottom: Spacing.md,
   },
-  phase2Badge: {
+  privacyBannerText: {
     fontSize: Typography.fontSize.xs,
-    fontWeight: 'bold',
-    color: '#1E40AF',
-    marginBottom: 4,
-  },
-  phase2Text: {
-    fontSize: Typography.fontSize.xs,
-    color: '#3B82F6',
+    color: '#166534',
     lineHeight: 16,
+  },
+  loadingBox: {
+    paddingVertical: Spacing.xl,
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: Spacing.sm,
+  },
+  emptyBox: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xxl,
+  },
+  emptyIcon: {
+    fontSize: 40,
+    marginBottom: Spacing.sm,
+  },
+  emptyTitle: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: 'bold',
+    color: Colors.text,
+  },
+  emptySubtitle: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
   alumniCard: {
     backgroundColor: Colors.card,
@@ -274,6 +353,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
+    flexWrap: 'wrap',
   },
   nameText: {
     fontSize: Typography.fontSize.md,
@@ -290,6 +370,17 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
     color: '#15803D',
+  },
+  mentorBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: BorderRadius.sm,
+  },
+  mentorText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#B45309',
   },
   headlineText: {
     fontSize: Typography.fontSize.xs,
@@ -325,15 +416,98 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     alignItems: 'flex-end',
   },
-  connectButton: {
+  detailButton: {
     paddingVertical: 6,
     paddingHorizontal: Spacing.md,
     backgroundColor: Colors.primary,
     borderRadius: BorderRadius.sm,
   },
-  connectButtonText: {
+  detailButtonText: {
     color: '#FFFFFF',
     fontSize: Typography.fontSize.xs,
     fontWeight: '600',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Colors.card,
+    borderTopLeftRadius: BorderRadius.lg,
+    borderTopRightRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
+  },
+  modalTitle: {
+    fontSize: Typography.fontSize.xl,
+    fontWeight: 'bold',
+    color: Colors.text,
+  },
+  modalCloseText: {
+    fontSize: Typography.fontSize.lg,
+    color: Colors.textSecondary,
+    padding: Spacing.xs,
+  },
+  modalHeadline: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+  modalMeta: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  modalLocation: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  modalSection: {
+    marginTop: Spacing.md,
+  },
+  modalSectionTitle: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginBottom: Spacing.xs,
+  },
+  modalSkillsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  modalComplianceNotice: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
+    marginVertical: Spacing.md,
+  },
+  modalComplianceText: {
+    fontSize: Typography.fontSize.xs,
+    color: '#1D4ED8',
+    lineHeight: 16,
+  },
+  modalCloseButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+  },
+  modalCloseButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: Typography.fontSize.sm,
   },
 });

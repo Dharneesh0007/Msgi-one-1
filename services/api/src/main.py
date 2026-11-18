@@ -6,15 +6,22 @@ Architecture: 7-Layer Architecture (Sommerville Ch. 6, Evans DDD)
 
 from datetime import datetime, timezone
 from typing import Any, Dict
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from src.core.config import settings
+from src.core.dependencies import get_current_user
+from src.schemas.user import UserUpdateRequest, UserOnboardingRequest
 from src.routers.users import router as users_router
 from src.routers.auth import router as auth_router
+from src.routers.alumni import router as alumni_router
+from src.routers.jobs import router as jobs_router
+from src.routers.mentors import router as mentors_router
+from src.routers.events import router as events_router
+from src.routers.global_connect import router as global_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -135,7 +142,7 @@ def health_check() -> HealthResponseEnvelope:
             timestamp=datetime.now(timezone.utc),
         ),
         error=None,
-        meta={"phase": "Phase 1 — Application Foundation"},
+        meta={"phase": "Phase 2 — Core Connected Business Modules"},
         timestamp=datetime.now(timezone.utc),
     )
 
@@ -143,36 +150,53 @@ def health_check() -> HealthResponseEnvelope:
 # Mount Versioned API Routers
 app.include_router(users_router, prefix=settings.API_V1_STR)
 app.include_router(auth_router, prefix=settings.API_V1_STR)
+app.include_router(alumni_router, prefix=settings.API_V1_STR)
+app.include_router(jobs_router, prefix=settings.API_V1_STR)
+app.include_router(mentors_router, prefix=settings.API_V1_STR)
+app.include_router(events_router, prefix=settings.API_V1_STR)
+app.include_router(global_router, prefix=settings.API_V1_STR)
 
 
-# Direct /api/v1/me and /api/v1/me/onboard aliases for client convenience
+# Direct /api/v1/me and /api/v1/me/onboard aliases for client convenience and backward compatibility
 @app.get(
     f"{settings.API_V1_STR}/me",
     tags=["Users & Profiles"],
     summary="Get Current User Profile (Direct Alias)",
-    include_in_schema=False,
+    include_in_schema=True,
 )
-async def direct_get_me(request: Request):
+def direct_get_me(
+    current_user=Depends(get_current_user),
+):
     from src.routers.users import get_my_profile
-    from src.core.dependencies import get_current_user
-    user = await get_current_user(request.headers.get("Authorization"))
-    return await get_my_profile(current_user=user)
+    return get_my_profile(current_user=current_user)
 
 
 @app.patch(
     f"{settings.API_V1_STR}/me",
     tags=["Users & Profiles"],
     summary="Update Current User Profile (Direct Alias)",
-    include_in_schema=False,
+    include_in_schema=True,
 )
-async def direct_patch_me(request: Request):
+def direct_patch_me(
+    update_data: UserUpdateRequest,
+    current_user=Depends(get_current_user),
+):
     from src.routers.users import update_my_profile
-    from src.schemas.user import UserUpdateRequest
-    from src.core.dependencies import get_current_user
-    user = await get_current_user(request.headers.get("Authorization"))
-    body = await request.json()
-    update_req = UserUpdateRequest(**body)
-    return await update_my_profile(update_data=update_req, current_user=user)
+    return update_my_profile(update_data=update_data, current_user=current_user)
+
+
+@app.post(
+    f"{settings.API_V1_STR}/me/onboard",
+    tags=["Users & Profiles"],
+    summary="Complete Profile Onboarding (Direct Alias)",
+    include_in_schema=True,
+)
+def direct_onboard_me(
+    onboarding_data: UserOnboardingRequest,
+    current_user=Depends(get_current_user),
+):
+    from src.routers.users import complete_onboarding
+    return complete_onboarding(onboarding_data=onboarding_data, current_user=current_user)
 
 
 @app.get("/", tags=["Root"])
