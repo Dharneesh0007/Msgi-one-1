@@ -1,0 +1,10 @@
+user_id,skill_name,proficiency_level,years_experience,is_verified
+user-student-001,Python,Intermediate,2,true
+user-student-001,SQL,Beginner,1,true
+user-student-001,FastAPI,Beginner,1,false
+user-student-002,TypeScript,Intermediate,2,true
+user-student-002,React Native,Beginner,1,true
+user-student-002,Python,Beginner,1,false
+student-journey-uuid-999,Python,Intermediate,2,true
+student-journey-uuid-999,Docker,Beginner,1,false
+student-journey-uuid-999,SQL,Beginner,1,true

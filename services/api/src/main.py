@@ -22,6 +22,7 @@ from src.routers.jobs import router as jobs_router
 from src.routers.mentors import router as mentors_router
 from src.routers.events import router as events_router
 from src.routers.global_connect import router as global_router
+from src.routers.ai import router as ai_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -142,7 +143,7 @@ def health_check() -> HealthResponseEnvelope:
             timestamp=datetime.now(timezone.utc),
         ),
         error=None,
-        meta={"phase": "Phase 2 — Core Connected Business Modules"},
+        meta={"phase": "Phase 3 — Agentic AI Intelligence"},
         timestamp=datetime.now(timezone.utc),
     )
 
@@ -155,6 +156,7 @@ app.include_router(jobs_router, prefix=settings.API_V1_STR)
 app.include_router(mentors_router, prefix=settings.API_V1_STR)
 app.include_router(events_router, prefix=settings.API_V1_STR)
 app.include_router(global_router, prefix=settings.API_V1_STR)
+app.include_router(ai_router, prefix=settings.API_V1_STR)
 
 
 # Direct /api/v1/me and /api/v1/me/onboard aliases for client convenience and backward compatibility
@@ -204,7 +206,7 @@ def root():
     """Root redirect / information endpoint."""
     return {
         "project": settings.PROJECT_NAME,
-        "phase": "Phase 1 — Application Foundation",
+        "phase": "Phase 3 — Agentic AI Intelligence",
         "documentation": "/docs",
         "health": f"{settings.API_V1_STR}/health",
     }

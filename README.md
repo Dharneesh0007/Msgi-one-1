@@ -85,6 +85,10 @@ uv run --offline --no-sync pytest tests/ -v
 # Full System Verification Suites
 python scripts/verify_phase_1.py
 python scripts/verify_phase_2.py
+python scripts/verify_phase_3.py
+
+# AI Command Centre Evaluation (15 Scenarios)
+python services/api/src/ai/evaluation.py
 
 # Data Ingestion Pipeline (Synthetic Seed Mode)
 python scripts/import_synthetic_data.py --mode demo
@@ -93,6 +97,17 @@ python scripts/import_synthetic_data.py --mode demo
 ---
 
 ## 4. Documentation Index
+
+### Phase 3 Agentic AI Command Centre Reports
+- [PHASE_3_PRECHECK.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_3_PRECHECK.md)
+- [PHASE_3_IMPLEMENTATION_REPORT.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_3_IMPLEMENTATION_REPORT.md)
+- [PHASE_3_AGENT_ARCHITECTURE.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_3_AGENT_ARCHITECTURE.md)
+- [PHASE_3_TOOL_REGISTRY.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_3_TOOL_REGISTRY.md)
+- [PHASE_3_APPROVAL_AND_RECOVERY.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_3_APPROVAL_AND_RECOVERY.md)
+- [PHASE_3_DATABASE_CHANGES.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_3_DATABASE_CHANGES.md)
+- [PHASE_3_EVALUATION_RESULTS.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_3_EVALUATION_RESULTS.md)
+- [PHASE_3_TEST_RESULTS.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_3_TEST_RESULTS.md)
+- [PHASE_3_INTEGRATION_HANDOFF.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_3_INTEGRATION_HANDOFF.md)
 
 ### Phase 2 Business Module Reports
 - [PHASE_2_PRECHECK.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_2_PRECHECK.md)

@@ -1,0 +1,26 @@
+role_id,role_name,skill_name,required_level,importance_weight,category
+role-ai-eng,AI Engineer,Python,Advanced,5,Core Programming
+role-ai-eng,AI Engineer,PyTorch,Advanced,5,Machine Learning
+role-ai-eng,AI Engineer,FastAPI,Intermediate,4,Backend & APIs
+role-ai-eng,AI Engineer,Docker,Intermediate,4,DevOps & Infrastructure
+role-ai-eng,AI Engineer,LangGraph,Intermediate,4,Agentic AI
+role-ai-eng,AI Engineer,Vector Databases,Intermediate,4,Data Architecture
+role-ml-eng,Machine Learning Engineer,Python,Advanced,5,Core Programming
+role-ml-eng,Machine Learning Engineer,PyTorch,Advanced,5,Machine Learning
+role-ml-eng,Machine Learning Engineer,MLOps,Advanced,5,Operations
+role-ml-eng,Machine Learning Engineer,Docker,Intermediate,4,DevOps & Infrastructure
+role-ml-eng,Machine Learning Engineer,SQL,Intermediate,4,Databases
+role-data-sci,Data Scientist,Python,Advanced,5,Core Programming
+role-data-sci,Data Scientist,SQL,Advanced,5,Databases
+role-data-sci,Data Scientist,Statistics,Advanced,5,Mathematics
+role-data-sci,Data Scientist,Scikit-Learn,Advanced,4,Machine Learning
+role-data-sci,Data Scientist,Data Visualization,Intermediate,3,Analytics
+role-cloud-arch,Cloud Solutions Architect,Cloud Architecture,Advanced,5,Cloud Platforms
+role-cloud-arch,Cloud Solutions Architect,Kubernetes,Advanced,5,DevOps & Infrastructure
+role-cloud-arch,Cloud Solutions Architect,Terraform,Intermediate,4,Infrastructure as Code
+role-cloud-arch,Cloud Solutions Architect,Networking & Security,Advanced,4,Security
+role-fs-eng,Full Stack Engineer,TypeScript,Advanced,5,Core Programming
+role-fs-eng,Full Stack Engineer,React Native,Advanced,5,Mobile Development
+role-fs-eng,Full Stack Engineer,FastAPI,Intermediate,4,Backend & APIs
+role-fs-eng,Full Stack Engineer,PostgreSQL,Intermediate,4,Databases
+role-fs-eng,Full Stack Engineer,Docker,Intermediate,3,DevOps & Infrastructure

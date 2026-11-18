@@ -224,3 +224,77 @@ export interface AlumniChapter {
   description?: string | null;
   member_count: number;
 }
+
+// ============================================================================
+// PHASE 3 — AGENTIC AI COMMAND CENTRE CONTRACTS
+// ============================================================================
+
+export interface ApprovalItem {
+  id: string;
+  run_id: string;
+  user_id: string;
+  action_type: 'send_mentor_request' | 'apply_job' | 'register_event';
+  target_entity_id: string;
+  target_entity_name: string;
+  status: 'pending' | 'approved' | 'rejected' | 'expired';
+  decision_note?: string | null;
+  decided_at?: string | null;
+  created_at: string;
+  execution_result?: Record<string, unknown> | null;
+}
+
+export interface SkillGapItem {
+  skill_name: string;
+  required_level: string;
+  importance_weight: number;
+  category: string;
+}
+
+export interface SkillGapAnalysis {
+  target_role: string;
+  match_percentage: number;
+  covered_skills: SkillGapItem[];
+  missing_skills: SkillGapItem[];
+  total_required_skills: number;
+  missing_skills_count: number;
+}
+
+export interface LearningRoadmapStep {
+  step: number;
+  skill: string;
+  course_title: string;
+  provider: string;
+  difficulty: string;
+  duration_hours: number;
+  url: string;
+  rating: number;
+}
+
+export interface AIChatRequest {
+  prompt: string;
+  session_id?: string;
+}
+
+export interface AIChatResponse {
+  session_id: string;
+  status: 'running' | 'interrupted' | 'completed' | 'rejected' | 'failed';
+  intent: 'alumni' | 'career' | 'mentorship' | 'events' | 'orchestrator' | 'rejected';
+  target_role?: string | null;
+  skill_gap?: SkillGapAnalysis | null;
+  learning_roadmap?: LearningRoadmapStep[] | null;
+  recommended_mentors?: MentorProfile[] | null;
+  recommended_jobs?: JobOpportunity[] | null;
+  recommended_events?: EventItem[] | null;
+  alumni_matches?: AlumniDirectoryItem[] | null;
+  pending_approval?: ApprovalItem | null;
+  final_summary: string;
+  evidence: Array<Record<string, unknown>>;
+  action_logs: Array<Record<string, unknown>>;
+  latency_ms: number;
+  total_tokens: number;
+}
+
+export interface ApprovalDecisionRequest {
+  decision: 'approved' | 'rejected';
+  decision_note?: string;
+}

@@ -1,0 +1,12 @@
+resource_id,title,provider,target_skill,difficulty,duration_hours,url,rating
+res-py-001,Mastering Modern Python 3.12,MSGI Academy,Python,Intermediate,20,https://academy.example.msgi.edu/courses/python-312,4.9
+res-torch-002,Deep Learning with PyTorch in Practice,DeepLearning.AI,PyTorch,Advanced,35,https://deeplearning.example.msgi.edu/courses/pytorch,4.8
+res-fastapi-003,Production Microservices with FastAPI,MSGI Academy,FastAPI,Intermediate,15,https://academy.example.msgi.edu/courses/fastapi-production,4.9
+res-docker-004,Containerization & Cloud Native with Docker,Coursera,Docker,Intermediate,12,https://coursera.example.msgi.edu/learn/docker-cloud-native,4.7
+res-lg-005,Agentic AI Architectures with LangGraph,DeepLearning.AI,LangGraph,Advanced,18,https://deeplearning.example.msgi.edu/courses/langgraph-agents,4.9
+res-vec-006,Vector Databases & Semantic Retrieval,Stanford Online,Vector Databases,Intermediate,14,https://online.stanford.example.msgi.edu/courses/vector-dbs,4.8
+res-mlops-007,Production MLOps Pipelines & Continuous Delivery,MSGI Academy,MLOps,Advanced,25,https://academy.example.msgi.edu/courses/mlops-delivery,4.8
+res-sql-008,Advanced Relational Database Design & SQL Optimization,MSGI Academy,SQL,Intermediate,16,https://academy.example.msgi.edu/courses/sql-optimization,4.9
+res-ts-009,Full-Stack TypeScript & Strict Architecture,MSGI Academy,TypeScript,Advanced,22,https://academy.example.msgi.edu/courses/typescript-strict,4.9
+res-rn-010,Cross-Platform Mobile Engineering with React Native,MSGI Academy,React Native,Advanced,30,https://academy.example.msgi.edu/courses/react-native-expo,4.8
+res-k8s-011,Enterprise Kubernetes Deployment & Helm Orchestration,Cloud Native Academy,Kubernetes,Advanced,28,https://cloudnative.example.msgi.edu/k8s-enterprise,4.7
