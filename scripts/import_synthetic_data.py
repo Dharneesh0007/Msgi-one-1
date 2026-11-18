@@ -506,6 +506,98 @@ def validate_and_import_impact_programmes(csv_path: Path) -> Dict[str, Any]:
     return {"status": "SUCCESS", "accepted": accepted, "rejected": rejected, "duplicates": duplicates, "unresolved": unresolved, "errors": errors}
 
 
+# -----------------------------------------------------------------------------
+# PHASE 5 QA DATASET VALIDATORS
+# -----------------------------------------------------------------------------
+
+def validate_and_import_qa_test_users(csv_path: Path, mode: str) -> Dict[str, Any]:
+    required_headers = [
+        "user_id", "email", "full_name", "role", "is_verified",
+        "verification_status", "department", "graduation_year", "city", "country", "notes"
+    ]
+    accepted, rejected, duplicates, unresolved = 0, 0, 0, 0
+    errors: List[str] = []
+    seen_ids = set()
+    seen_emails = set()
+    valid_roles = {"student", "alumni", "faculty", "recruiter", "admin", "candidate"}
+
+    with open(csv_path, mode="r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for rh in required_headers:
+            if rh not in (reader.fieldnames or []):
+                return {"status": "FAILED", "reason": f"Missing qa_test_users CSV header: '{rh}'"}
+
+        for row_idx, row in enumerate(reader, start=2):
+            uid = row.get("user_id", "").strip()
+            email = row.get("email", "").strip().lower()
+            role = row.get("role", "").strip().lower()
+
+            if uid in seen_ids:
+                duplicates += 1
+                errors.append(f"Row {row_idx}: Duplicate user_id '{uid}'.")
+                continue
+            seen_ids.add(uid)
+
+            if email in seen_emails:
+                duplicates += 1
+                errors.append(f"Row {row_idx}: Duplicate email '{email}'.")
+                continue
+            seen_emails.add(email)
+
+            if mode == "demo" and not email.endswith("@example.msgi.edu"):
+                rejected += 1
+                errors.append(f"Row {row_idx}: Demo mode requires @example.msgi.edu synthetic email domain.")
+                continue
+
+            if role not in valid_roles:
+                rejected += 1
+                errors.append(f"Row {row_idx}: Invalid role '{role}'.")
+                continue
+
+            accepted += 1
+
+    return {"status": "SUCCESS", "accepted": accepted, "rejected": rejected, "duplicates": duplicates, "unresolved": unresolved, "errors": errors}
+
+
+def validate_and_import_qa_role_permissions(csv_path: Path) -> Dict[str, Any]:
+    required_headers = [
+        "module", "endpoint", "method", "student", "verified_alumni",
+        "unverified_alumni", "faculty", "recruiter", "admin", "candidate", "privacy_boundary"
+    ]
+    accepted, rejected, duplicates, unresolved = 0, 0, 0, 0
+    errors: List[str] = []
+    seen_endpoints = set()
+    valid_perms = {"ALLOWED", "FORBIDDEN", "OWNER_ONLY"}
+
+    with open(csv_path, mode="r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for rh in required_headers:
+            if rh not in (reader.fieldnames or []):
+                return {"status": "FAILED", "reason": f"Missing qa_role_permissions CSV header: '{rh}'"}
+
+        for row_idx, row in enumerate(reader, start=2):
+            endpoint = row.get("endpoint", "").strip()
+            method = row.get("method", "").strip().upper()
+            key = (endpoint, method)
+
+            if key in seen_endpoints:
+                duplicates += 1
+                errors.append(f"Row {row_idx}: Duplicate endpoint/method '{method} {endpoint}'.")
+                continue
+            seen_endpoints.add(key)
+
+            for col in ["student", "verified_alumni", "unverified_alumni", "faculty", "recruiter", "admin", "candidate"]:
+                val = row.get(col, "").strip().upper()
+                if val not in valid_perms:
+                    rejected += 1
+                    errors.append(f"Row {row_idx}: Invalid permission value '{val}' in column '{col}'.")
+                    break
+            else:
+                accepted += 1
+
+    return {"status": "SUCCESS", "accepted": accepted, "rejected": rejected, "duplicates": duplicates, "unresolved": unresolved, "errors": errors}
+
+
 def main():
     parser = argparse.ArgumentParser(description="MSGI One Unified Data Ingestion Tool")
     parser.add_argument("--mode", choices=["demo", "live"], default="demo", help="Dataset mode")
@@ -542,6 +634,9 @@ def main():
         ("Projects (6)", validate_and_import_projects, "projects.csv"),
         ("Startups (5)", validate_and_import_startups, "startups.csv"),
         ("Impact Programmes (4)", validate_and_import_impact_programmes, "impact_programmes.csv"),
+        # Phase 5 QA Verification Datasets
+        ("QA Test Users (14)", lambda p: validate_and_import_qa_test_users(p, args.mode), "qa_test_users.csv"),
+        ("QA Role Perms (35)", validate_and_import_qa_role_permissions, "qa_role_permissions.csv"),
     ]
 
     total_accepted = 0

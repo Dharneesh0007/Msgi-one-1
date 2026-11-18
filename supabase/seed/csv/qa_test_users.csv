@@ -1,0 +1,15 @@
+user_id,email,full_name,role,is_verified,verification_status,department,graduation_year,city,country,notes
+user-student-001,alex.rivera@example.msgi.edu,Alex Rivera,student,true,verified,Computer Science,2025,San Francisco,USA,Active undergraduate student seeking software engineering internships
+user-student-002,jordan.smith@example.msgi.edu,Jordan Smith,student,true,verified,Electrical Engineering,2026,Boston,USA,Undergraduate focusing on embedded systems and robotics
+user-student-phase4-001,priya.nair@example.msgi.edu,Priya Nair,student,true,verified,Data Science,2025,London,UK,Graduate student specializing in NLP and generative AI
+user-student-phase4-002,lucas.vance@example.msgi.edu,Lucas Vance,student,true,verified,Information Systems,2026,Toronto,Canada,Junior student interested in cloud operations and DevOps
+student-journey-uuid-999,student.journey@example.msgi.edu,Journey Test Student,student,true,verified,Computer Science,2025,Singapore,Singapore,Dedicated synthetic student for end-to-end multi-agent tests
+user-kenji-001,kenji.sato@example.msgi.edu,Kenji Sato,alumni,true,verified,Computer Science,2018,Tokyo,Japan,Verified alumni cloud architect and active mentor
+user-ananya-002,ananya.sharma@example.msgi.edu,Ananya Sharma,alumni,true,verified,Computer Science,2019,Bengaluru,India,Verified alumni AI researcher and startup founder
+user-david-003,david.chen@example.msgi.edu,David Chen,alumni,true,verified,Business & IT,2015,Singapore,Singapore,Verified alumni principal product manager
+user-yuki-004,yuki.tanaka@example.msgi.edu,Yuki Tanaka,alumni,true,verified,Data Science,2021,Tokyo,Japan,Verified alumni data scientist and mentor
+user-candidate-001,maya.patel@example.msgi.edu,Maya Patel,alumni,false,pending,Biomedical Informatics,2023,Mumbai,India,Unverified alumni awaiting credential verification
+user-candidate-002,carlos.mendez@example.msgi.edu,Carlos Mendez,alumni,false,pending,Software Engineering,2022,Madrid,Spain,Unverified alumni awaiting degree certificate validation
+user-faculty-001,robert.zhang@example.msgi.edu,Dr. Robert Zhang,faculty,true,verified,Computer Science,2005,San Francisco,USA,Department Head and Research Lab Lead
+user-recruiter-001,elena.rostova@example.msgi.edu,Elena Rostova,recruiter,true,verified,Human Resources,2017,London,UK,Talent Partner at CloudNative Labs
+user-admin-001,sarah.jenkins@example.msgi.edu,Sarah Jenkins,admin,true,verified,Institutional Affairs,2010,San Francisco,USA,Chief Institutional Platform Administrator

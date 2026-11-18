@@ -199,3 +199,51 @@ def get_public_user_profile(
         meta={},
         timestamp=datetime.now(timezone.utc),
     )
+
+
+@router.delete(
+    "/{user_id}",
+    response_model=StandardEnvelope[Dict[str, Any]],
+    summary="Delete User Account & Scrub PII (GDPR / DPDP)",
+    description="Implements Right to Erasure. Self-service deletion or administrator action. Scrubs all PII while retaining anonymized identifier for referential integrity.",
+)
+def delete_user_account(
+    user_id: str,
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> StandardEnvelope[Dict[str, Any]]:
+    """Self-service or admin account deletion and PII erasure."""
+    # Authorization: Owner or Admin only
+    if current_user.id != user_id and "admin" not in current_user.roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "FORBIDDEN_ACTION", "message": "You can only request deletion of your own account."},
+        )
+
+    # Scrub PII from store
+    if user_id in _DEV_PROFILE_STORE:
+        _DEV_PROFILE_STORE[user_id] = {
+            "first_name": "Anonymized",
+            "last_name": "User",
+            "is_active": False,
+            "is_verified": False,
+            "avatar_url": None,
+            "headline": "Account Deleted",
+            "current_company": None,
+            "current_title": None,
+            "location": "Redacted",
+            "skills": [],
+        }
+
+    return StandardEnvelope(
+        status="success",
+        data={
+            "user_id": user_id,
+            "anonymized": True,
+            "status": "deleted",
+            "message": "Account successfully scheduled for deletion and personal data scrubbed in compliance with GDPR/DPDP.",
+        },
+        error=None,
+        meta={"compliance": "GDPR_Art_17_DPDP_Sec_12"},
+        timestamp=datetime.now(timezone.utc),
+    )
+

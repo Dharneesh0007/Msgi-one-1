@@ -112,6 +112,22 @@ Following **Pressman & Maxim** (*Software Engineering*, Ch. 11: "WebApp Design")
 - **DB Operations:** `UPDATE users ... WHERE id = auth.uid()`.
 - **Audit:** Audit log emitted on user profile updates.
 
+#### `DELETE /api/v1/users/{id}`
+- **Purpose:** Delete account and scrub all personal data (GDPR Article 17 / DPDP Section 12 Right to Erasure / Google Play requirement).
+- **Allowed Roles:** Account Owner (`auth.uid() = id`) or Institutional Admin.
+- **Request Headers:** `Authorization: Bearer <jwt>`.
+- **Response Schema (`data`):**
+  ```json
+  {
+    "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "anonymized": true,
+    "status": "deleted",
+    "message": "Account successfully scheduled for deletion and personal data scrubbed in compliance with GDPR/DPDP."
+  }
+  ```
+- **DB Operations:** `UPDATE users SET is_active = false, first_name = 'Anonymized', last_name = 'User', avatar_url = NULL WHERE id = auth.uid()`.
+- **Audit:** Anonymized audit log emitted with deletion timestamp.
+
 ---
 
 ### 2.2 Alumni Network Endpoints

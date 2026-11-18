@@ -1,0 +1,36 @@
+module,endpoint,method,student,verified_alumni,unverified_alumni,faculty,recruiter,admin,candidate,privacy_boundary
+Identity & Profiles,/api/v1/users/{id},GET,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Public profile fields visible; PII masked unless consented
+Identity & Profiles,/api/v1/users/{id},PUT,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,ALLOWED,OWNER_ONLY,Users may only update their own profile; Admin may edit any
+Identity & Profiles,/api/v1/users/{id},DELETE,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,ALLOWED,OWNER_ONLY,GDPR/DPDP erasure; self-service or admin oversight
+Alumni Network,/api/v1/alumni,GET,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Only verified alumni returned in public directory search
+Alumni Network,/api/v1/alumni/{id},GET,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Contact info masked unless alumni has mentor_opt_in=true
+CareerBridge,/api/v1/jobs,GET,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Active approved job postings visible to all authenticated roles
+CareerBridge,/api/v1/jobs,POST,FORBIDDEN,ALLOWED,FORBIDDEN,ALLOWED,ALLOWED,ALLOWED,FORBIDDEN,Students and unverified candidates cannot post job openings
+CareerBridge,/api/v1/jobs/{id}/apply,POST,ALLOWED,ALLOWED,FORBIDDEN,FORBIDDEN,FORBIDDEN,ALLOWED,FORBIDDEN,Only students and verified alumni may submit job applications
+MentorMatch,/api/v1/mentors,GET,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Returns verified mentors with active availability
+MentorMatch,/api/v1/mentors/requests,POST,ALLOWED,ALLOWED,FORBIDDEN,FORBIDDEN,FORBIDDEN,ALLOWED,FORBIDDEN,Mentees may initiate mentorship requests with goals
+MentorMatch,/api/v1/mentors/requests/{id}/status,PUT,FORBIDDEN,OWNER_ONLY,FORBIDDEN,OWNER_ONLY,FORBIDDEN,ALLOWED,FORBIDDEN,Only the assigned mentor may accept or decline request
+Events & Reunions,/api/v1/events,GET,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,All active institutional and alumni events listed
+Events & Reunions,/api/v1/events,POST,FORBIDDEN,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,Event creation restricted to alumni hosts faculty and admin
+Events & Reunions,/api/v1/events/{id}/register,POST,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Event registration open to all authenticated roles
+Global Connect,/api/v1/global/directory,GET,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,City-level geolocation only with user consent; country default
+Learning & Upskilling,/api/v1/learning/resources,GET,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Resource catalog open to all registered learners
+Learning & Upskilling,/api/v1/learning/enroll,POST,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Personal course enrollment and progress tracking
+Communities,/api/v1/communities,GET,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Directory lists public and private group summaries
+Communities,/api/v1/communities,POST,ALLOWED,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,Requires verified account standing to create a community
+Communities,/api/v1/communities/{id}/join,POST,ALLOWED,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,Public groups auto-join; private groups create pending request
+Institutional Verification,/api/v1/verifications/submit,POST,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Users submit credential evidence for institutional role upgrade
+Institutional Verification,/api/v1/admin/verifications,GET,FORBIDDEN,FORBIDDEN,FORBIDDEN,FORBIDDEN,FORBIDDEN,ALLOWED,FORBIDDEN,Restricted strictly to institutional administrative roles
+Institutional Verification,/api/v1/admin/verifications/{id}/review,POST,FORBIDDEN,FORBIDDEN,FORBIDDEN,FORBIDDEN,FORBIDDEN,ALLOWED,FORBIDDEN,Admin decision; never auto-approved by AI agents
+Admin & Audit,/api/v1/admin/audit-logs,GET,FORBIDDEN,FORBIDDEN,FORBIDDEN,FORBIDDEN,FORBIDDEN,ALLOWED,FORBIDDEN,Institutional audit logs accessible strictly to platform admin
+Collaborative Projects,/api/v1/projects,GET,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Active student and faculty projects catalog
+Collaborative Projects,/api/v1/projects,POST,ALLOWED,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,Requires verified student faculty or alumni account
+Collaborative Projects,/api/v1/projects/{id}/join,POST,ALLOWED,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,Authenticated users can request collaboration
+Startups & Incubation,/api/v1/startups,GET,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Showcase directory of alumni and institutional ventures
+Startups & Incubation,/api/v1/startups,POST,FORBIDDEN,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,Founders must hold verified alumni or faculty credentials
+Social Impact & Giving,/api/v1/giving/programmes,GET,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Non-monetary volunteering initiatives open to all
+Social Impact & Giving,/api/v1/giving/pledge,POST,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,ALLOWED,Volunteer hour pledge; strictly zero monetary transactions
+AI Command Centre,/api/v1/ai/dispatch,POST,ALLOWED,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,ALLOWED,FORBIDDEN,Dispatches multi-agent workflow; HITL required for mutations
+AI Command Centre,/api/v1/ai/approve,POST,OWNER_ONLY,OWNER_ONLY,FORBIDDEN,OWNER_ONLY,FORBIDDEN,ALLOWED,FORBIDDEN,Human-in-the-loop gate; caller must own execution thread
+Realtime Notifications,/api/v1/notifications,GET,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,Users strictly receive their own in-app notifications
+Realtime Notifications,/api/v1/notifications/{id}/read,PATCH,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,OWNER_ONLY,Users may only acknowledge their own notifications
