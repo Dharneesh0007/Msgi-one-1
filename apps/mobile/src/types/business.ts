@@ -144,3 +144,80 @@ export interface AlumniChapter {
   description?: string | null;
   member_count: number;
 }
+
+// Phase 4 Extended Types
+export interface LearningResourceItem {
+  resource_id: string;
+  title: string;
+  provider: string;
+  target_skill: string;
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  duration_hours: number;
+  url: string;
+  rating: number;
+}
+
+export interface CourseEnrollmentItem {
+  id: string;
+  user_id: string;
+  resource_id: string;
+  course_title: string;
+  progress_percentage: number;
+  status: 'enrolled' | 'in_progress' | 'completed' | 'dropped';
+  enrolled_at: string;
+  completed_at?: string | null;
+  updated_at: string;
+}
+
+export interface CommunityItem {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  category: string;
+  is_private: boolean;
+  creator_id: string;
+  member_count: number;
+  topics: string[];
+  created_at: string;
+  is_member?: boolean;
+  membership_status?: string | null;
+}
+
+export interface CommunityMembershipItem {
+  id: string;
+  community_id: string;
+  community_name: string;
+  user_id: string;
+  role: 'member' | 'moderator' | 'admin';
+  status: 'pending' | 'active' | 'rejected' | 'banned';
+  joined_at: string;
+}
+
+export interface VerificationRequestItem {
+  id: string;
+  user_id: string;
+  user_email: string;
+  user_name: string;
+  requested_role: 'alumni' | 'faculty' | 'recruiter';
+  evidence_payload: Record<string, unknown>;
+  status: 'pending' | 'approved' | 'rejected';
+  reviewed_by?: string | null;
+  review_notes?: string | null;
+  created_at: string;
+  decided_at?: string | null;
+}
+
+export interface NotificationRecord {
+  id: string;
+  user_id: string;
+  event_type: string;
+  entity_id: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  payload: Record<string, unknown>;
+  created_at: string;
+  read_at?: string | null;
+}
+

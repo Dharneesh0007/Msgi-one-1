@@ -86,6 +86,7 @@ uv run --offline --no-sync pytest tests/ -v
 python scripts/verify_phase_1.py
 python scripts/verify_phase_2.py
 python scripts/verify_phase_3.py
+python scripts/verify_phase_4.py
 
 # AI Command Centre Evaluation (15 Scenarios)
 python services/api/src/ai/evaluation.py
@@ -97,6 +98,18 @@ python scripts/import_synthetic_data.py --mode demo
 ---
 
 ## 4. Documentation Index
+
+### Phase 4 Extended Modules & Android Release Reports
+- [PHASE_4_PRECHECK.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_4_PRECHECK.md)
+- [PHASE_4_IMPLEMENTATION_REPORT.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_4_IMPLEMENTATION_REPORT.md)
+- [PHASE_4_MODULE_IMPLEMENTATION.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_4_MODULE_IMPLEMENTATION.md)
+- [PHASE_4_REALTIME_DESIGN.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_4_REALTIME_DESIGN.md)
+- [PHASE_4_ANDROID_RELEASE_READINESS.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_4_ANDROID_RELEASE_READINESS.md)
+- [PHASE_4_DATABASE_CHANGES.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_4_DATABASE_CHANGES.md)
+- [PHASE_4_DATA_IMPORT_GUIDE.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_4_DATA_IMPORT_GUIDE.md)
+- [PHASE_4_SECURITY_REVIEW.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_4_SECURITY_REVIEW.md)
+- [PHASE_4_TEST_RESULTS.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_4_TEST_RESULTS.md)
+- [PHASE_4_INTEGRATION_HANDOFF.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_4_INTEGRATION_HANDOFF.md)
 
 ### Phase 3 Agentic AI Command Centre Reports
 - [PHASE_3_PRECHECK.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_3_PRECHECK.md)

@@ -4,11 +4,16 @@ Assembles Supervisor, Domain Agents, Synthesizer, and Checkpointer.
 Principles: Kleppmann Fault Tolerance & Pressman Process Management.
 """
 
+import os
+import sqlite3
 import time
 import uuid
+from pathlib import Path
 from typing import Dict, Any, List, Optional
 from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 
 from src.ai.state import CommandCentreState
 from src.ai.agents.supervisor import supervisor_node
@@ -165,8 +170,105 @@ def build_command_centre_graph():
     # Synthesis to End
     builder.add_edge("synthesizer", END)
 
-    # Compile with MemorySaver checkpointer
-    checkpointer = MemorySaver()
+    if checkpointer is None:
+        checkpointer = get_default_checkpointer()
+    return builder.compile(checkpointer=checkpointer)
+
+
+def get_default_checkpointer() -> BaseCheckpointSaver:
+    """
+    Returns appropriate durable checkpointer:
+    - PostgresSaver when LANGGRAPH_CHECKPOINT_MODE=postgres and DATABASE_URL is configured
+    - SqliteSaver when LANGGRAPH_CHECKPOINT_MODE=sqlite (durable, survives API process restarts)
+    - MemorySaver when LANGGRAPH_CHECKPOINT_MODE=memory (for fast ephemeral unit testing)
+    """
+    mode = os.getenv("LANGGRAPH_CHECKPOINT_MODE", "sqlite").lower()
+    if mode == "postgres":
+        db_url = os.getenv("LANGGRAPH_CHECKPOINT_DB_URL") or os.getenv("DATABASE_URL")
+        if db_url:
+            try:
+                from langgraph.checkpoint.postgres import PostgresSaver
+                saver = PostgresSaver.from_conn_string(db_url)
+                saver.setup()
+                return saver
+            except Exception:
+                pass
+    elif mode == "sqlite":
+        try:
+            db_path = Path(__file__).resolve().parent.parent.parent / "checkpoints.sqlite"
+            conn = sqlite3.connect(str(db_path), check_same_thread=False)
+            saver = SqliteSaver(conn)
+            saver.setup()
+            return saver
+        except Exception:
+            pass
+    return MemorySaver()
+
+
+def build_command_centre_graph(checkpointer: Optional[BaseCheckpointSaver] = None):
+    builder = StateGraph(CommandCentreState)
+
+    # Add Nodes
+    builder.add_node("supervisor", supervisor_node)
+    builder.add_node("alumni_agent", alumni_agent_node)
+    builder.add_node("career_agent", career_agent_node)
+    builder.add_node("learning_agent", learning_agent_node)
+    builder.add_node("mentorship_agent", mentorship_agent_node)
+    builder.add_node("events_agent", events_agent_node)
+    builder.add_node("synthesizer", synthesizer_node)
+
+    # Define Workflow Edges
+    builder.add_edge(START, "supervisor")
+
+    builder.add_conditional_edges(
+        "supervisor",
+        route_supervisor,
+        {
+            END: END,
+            "alumni_agent": "alumni_agent",
+            "career_agent": "career_agent",
+            "mentorship_agent": "mentorship_agent",
+            "events_agent": "events_agent",
+        },
+    )
+
+    # Alumni Branch
+    builder.add_edge("alumni_agent", "synthesizer")
+
+    # Career Branch (Career -> Learning -> Synthesizer or Orchestrator cascade)
+    def route_after_career(state: CommandCentreState) -> str:
+        if state.get("status") == "interrupted":
+            return "synthesizer"
+        return "learning_agent"
+
+    builder.add_conditional_edges("career_agent", route_after_career, {"synthesizer": "synthesizer", "learning_agent": "learning_agent"})
+
+    def route_after_learning(state: CommandCentreState) -> str:
+        intent = state.get("intent")
+        if intent == "orchestrator":
+            return "mentorship_agent"
+        return "synthesizer"
+
+    builder.add_conditional_edges("learning_agent", route_after_learning, {"mentorship_agent": "mentorship_agent", "synthesizer": "synthesizer"})
+
+    # Mentorship Branch
+    def route_after_mentorship(state: CommandCentreState) -> str:
+        if state.get("status") == "interrupted":
+            return "synthesizer"
+        if state.get("intent") == "orchestrator":
+            return "alumni_agent"
+        return "synthesizer"
+
+    builder.add_conditional_edges("mentorship_agent", route_after_mentorship, {"synthesizer": "synthesizer", "alumni_agent": "alumni_agent"})
+
+    # Events Branch
+    builder.add_edge("events_agent", "synthesizer")
+
+    # Synthesis to End
+    builder.add_edge("synthesizer", END)
+
+    if checkpointer is None:
+        checkpointer = get_default_checkpointer()
     return builder.compile(checkpointer=checkpointer)
 
 

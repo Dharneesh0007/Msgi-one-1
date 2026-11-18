@@ -23,6 +23,11 @@ from src.routers.mentors import router as mentors_router
 from src.routers.events import router as events_router
 from src.routers.global_connect import router as global_router
 from src.routers.ai import router as ai_router
+from src.routers.learning import router as learning_router
+from src.routers.communities import router as communities_router
+from src.routers.admin import router as admin_router
+from src.routers.notifications import router as notifications_router
+from src.routers.extended import router as extended_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -143,7 +148,7 @@ def health_check() -> HealthResponseEnvelope:
             timestamp=datetime.now(timezone.utc),
         ),
         error=None,
-        meta={"phase": "Phase 3 — Agentic AI Intelligence"},
+        meta={"phase": "Phase 4 — Extended MVP, Realtime and Android Release Preparation"},
         timestamp=datetime.now(timezone.utc),
     )
 
@@ -157,6 +162,11 @@ app.include_router(mentors_router, prefix=settings.API_V1_STR)
 app.include_router(events_router, prefix=settings.API_V1_STR)
 app.include_router(global_router, prefix=settings.API_V1_STR)
 app.include_router(ai_router, prefix=settings.API_V1_STR)
+app.include_router(learning_router, prefix=settings.API_V1_STR)
+app.include_router(communities_router, prefix=settings.API_V1_STR)
+app.include_router(admin_router, prefix=settings.API_V1_STR)
+app.include_router(notifications_router, prefix=settings.API_V1_STR)
+app.include_router(extended_router, prefix=settings.API_V1_STR)
 
 
 # Direct /api/v1/me and /api/v1/me/onboard aliases for client convenience and backward compatibility
@@ -201,12 +211,48 @@ def direct_onboard_me(
     return complete_onboarding(onboarding_data=onboarding_data, current_user=current_user)
 
 
+@app.get(
+    f"{settings.API_V1_STR}/me/learning",
+    tags=["Learning Academy"],
+    summary="Get My Enrolled Courses (Direct Alias)",
+)
+def direct_get_my_learning(current_user=Depends(get_current_user)):
+    from src.services.learning_service import get_my_learning
+    from src.schemas.user import StandardEnvelope
+    items = get_my_learning(user=current_user)
+    return StandardEnvelope(status="success", data=items, timestamp=datetime.now(timezone.utc))
+
+
+@app.get(
+    f"{settings.API_V1_STR}/me/communities",
+    tags=["Communities & Groups"],
+    summary="Get My Community Memberships (Direct Alias)",
+)
+def direct_get_my_communities(current_user=Depends(get_current_user)):
+    from src.services.community_service import get_my_communities
+    from src.schemas.user import StandardEnvelope
+    items = get_my_communities(user=current_user)
+    return StandardEnvelope(status="success", data=items, timestamp=datetime.now(timezone.utc))
+
+
+@app.get(
+    f"{settings.API_V1_STR}/me/notifications",
+    tags=["Notifications"],
+    summary="Get My Notifications (Direct Alias)",
+)
+def direct_get_my_notifications(current_user=Depends(get_current_user)):
+    from src.services.notifications_service import get_my_notifications
+    from src.schemas.user import StandardEnvelope
+    items = get_my_notifications(user=current_user)
+    return StandardEnvelope(status="success", data=items, timestamp=datetime.now(timezone.utc))
+
+
 @app.get("/", tags=["Root"])
 def root():
     """Root redirect / information endpoint."""
     return {
         "project": settings.PROJECT_NAME,
-        "phase": "Phase 3 — Agentic AI Intelligence",
+        "phase": "Phase 4 — Extended MVP, Realtime and Android Release Preparation",
         "documentation": "/docs",
         "health": f"{settings.API_V1_STR}/health",
     }

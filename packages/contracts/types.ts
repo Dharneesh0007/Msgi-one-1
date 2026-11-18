@@ -298,3 +298,173 @@ export interface ApprovalDecisionRequest {
   decision: 'approved' | 'rejected';
   decision_note?: string;
 }
+
+// ============================================================================
+// PHASE 4 — EXTENDED MODULES & REALTIME CONTRACTS
+// ============================================================================
+
+export interface LearningResourceItem {
+  resource_id: string;
+  title: string;
+  provider: string;
+  target_skill: string;
+  difficulty: string;
+  duration_hours: number;
+  url: string;
+  rating: number;
+}
+
+export interface CourseEnrollmentItem {
+  id: string;
+  user_id: string;
+  resource_id: string;
+  course_title: string;
+  progress_percentage: number;
+  status: 'enrolled' | 'in_progress' | 'completed' | 'dropped';
+  enrolled_at: string;
+  completed_at?: string | null;
+  updated_at: string;
+}
+
+export interface CommunityItem {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  category: string;
+  is_private: boolean;
+  creator_id: string;
+  member_count: number;
+  topics: string[];
+  created_at: string;
+  is_member?: boolean;
+  membership_status?: string | null;
+}
+
+export interface CommunityMembershipItem {
+  id: string;
+  community_id: string;
+  community_name: string;
+  user_id: string;
+  role: 'member' | 'moderator' | 'admin';
+  status: 'pending' | 'active' | 'rejected' | 'banned';
+  joined_at: string;
+}
+
+export interface VerificationRequestItem {
+  id: string;
+  user_id: string;
+  user_email: string;
+  user_name: string;
+  requested_role: 'alumni' | 'faculty' | 'recruiter';
+  evidence_payload: Record<string, unknown>;
+  status: 'pending' | 'approved' | 'rejected';
+  reviewed_by?: string | null;
+  review_notes?: string | null;
+  created_at: string;
+  decided_at?: string | null;
+}
+
+export interface AdminSummaryResponse {
+  total_users: number;
+  pending_verifications_count: number;
+  active_alumni_count: number;
+  active_jobs_count: number;
+  active_mentors_count: number;
+}
+
+export interface AdminAuditLogItem {
+  id: string;
+  admin_id: string;
+  admin_email: string;
+  action: string;
+  target_type: string;
+  target_id: string;
+  details: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface ProjectItem {
+  id: string;
+  title: string;
+  description: string;
+  owner_id: string;
+  owner_name: string;
+  required_skills: string[];
+  status: 'active' | 'completed' | 'archived';
+  member_count: number;
+  created_at: string;
+  is_member?: boolean;
+}
+
+export interface ProjectMemberItem {
+  id: string;
+  project_id: string;
+  project_title: string;
+  user_id: string;
+  role: 'owner' | 'contributor' | 'applicant';
+  status: 'pending' | 'active' | 'rejected';
+  created_at: string;
+}
+
+export interface StartupItem {
+  id: string;
+  name: string;
+  founder_id: string;
+  founder_name: string;
+  industry: string;
+  stage: 'idea' | 'seed' | 'early' | 'growth' | 'mature';
+  tagline: string;
+  website_url?: string | null;
+  seeking_mentors: boolean;
+  seeking_talent: boolean;
+  is_verified: boolean;
+  created_at: string;
+}
+
+export interface StartupConnectionItem {
+  id: string;
+  startup_id: string;
+  startup_name: string;
+  user_id: string;
+  intent: 'mentorship' | 'talent' | 'collaboration';
+  message: string;
+  status: 'pending' | 'accepted' | 'declined';
+  created_at: string;
+}
+
+export interface ImpactProgrammeItem {
+  id: string;
+  title: string;
+  description: string;
+  coordinator_name: string;
+  programme_type: 'volunteering' | 'mentorship_drive' | 'community_outreach';
+  target_volunteers: number;
+  current_volunteers: number;
+  is_active: boolean;
+  created_at: string;
+  is_registered?: boolean;
+}
+
+export interface VolunteerInterestItem {
+  id: string;
+  programme_id: string;
+  programme_title: string;
+  user_id: string;
+  interest_note: string;
+  status: 'registered' | 'confirmed' | 'withdrawn';
+  created_at: string;
+}
+
+export interface NotificationRecord {
+  id: string;
+  user_id: string;
+  event_type: string;
+  entity_id: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  payload: Record<string, unknown>;
+  created_at: string;
+  read_at?: string | null;
+}

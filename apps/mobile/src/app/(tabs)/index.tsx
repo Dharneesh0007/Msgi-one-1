@@ -18,7 +18,16 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
-import { MentorProfile, EventItem, RegionalLocation } from '../../types/business';
+import {
+  MentorProfile,
+  EventItem,
+  RegionalLocation,
+  LearningResourceItem,
+  CourseEnrollmentItem,
+  CommunityItem,
+  NotificationRecord,
+  VerificationRequestItem,
+} from '../../types/business';
 import { Colors, Typography, Spacing, BorderRadius } from '../../constants/theme';
 
 export default function DashboardScreen() {
@@ -42,25 +51,55 @@ export default function DashboardScreen() {
   const [registeringEventId, setRegisteringEventId] = useState<string | null>(null);
   const [eventFeedback, setEventFeedback] = useState<string | null>(null);
 
+  // Phase 4 Services Hub state
+  const [activeServicesTab, setActiveServicesTab] = useState<'learning' | 'communities' | 'notifications' | 'admin'>('learning');
+  const [learningCourses, setLearningCourses] = useState<LearningResourceItem[]>([]);
+  const [userEnrollments, setUserEnrollments] = useState<CourseEnrollmentItem[]>([]);
+  const [communities, setCommunities] = useState<CommunityItem[]>([]);
+  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
+  const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
+  const [pendingVerifications, setPendingVerifications] = useState<VerificationRequestItem[]>([]);
+  const [serviceActionFeedback, setServiceActionFeedback] = useState<string | null>(null);
+  const [updatingEnrollmentId, setUpdatingEnrollmentId] = useState<string | null>(null);
+
   const loadDashboardData = useCallback(async () => {
     try {
       setLoadingData(true);
-      const [mentorRes, eventRes, locRes] = await Promise.allSettled([
+      const [mentorRes, eventRes, locRes, learnRes, myLearnRes, commRes, notifRes, unreadRes] = await Promise.allSettled([
         api.listMentors({ student_goal: 'AI Engineer' }),
         api.listEvents(),
         api.getGlobalLocations(),
+        api.listLearningResources(),
+        api.getMyLearning(),
+        api.listCommunities(),
+        api.getMyNotifications(),
+        api.getUnreadNotificationCount(),
       ]);
 
       if (mentorRes.status === 'fulfilled') setMentors(mentorRes.value || []);
       if (eventRes.status === 'fulfilled') setEvents(eventRes.value || []);
       if (locRes.status === 'fulfilled') setLocations(locRes.value || []);
+      if (learnRes.status === 'fulfilled') setLearningCourses(learnRes.value || []);
+      if (myLearnRes.status === 'fulfilled') setUserEnrollments(myLearnRes.value || []);
+      if (commRes.status === 'fulfilled') setCommunities(commRes.value || []);
+      if (notifRes.status === 'fulfilled') setNotifications(notifRes.value || []);
+      if (unreadRes.status === 'fulfilled') setUnreadNotifCount(unreadRes.value || 0);
+
+      if (primaryRole === 'admin' || user?.roles?.includes('admin') || user?.roles?.includes('institutional_admin')) {
+        try {
+          const vReqs = await api.listPendingVerifications();
+          setPendingVerifications(vReqs || []);
+        } catch {
+          // ignore non-admin role errors
+        }
+      }
     } catch (err: any) {
       console.warn('[Dashboard] Data load error:', err.message);
     } finally {
       setLoadingData(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [primaryRole, user?.roles]);
 
   useEffect(() => {
     loadDashboardData();
@@ -102,6 +141,63 @@ export default function DashboardScreen() {
       setMentorActionFeedback(err.message || 'Failed to submit request.');
     } finally {
       setIsSubmittingMentorReq(false);
+    }
+  };
+
+  const handleEnrollCourse = async (resourceId: string) => {
+    setServiceActionFeedback(null);
+    try {
+      await api.enrollInCourse(resourceId);
+      setServiceActionFeedback('Successfully enrolled in course!');
+      loadDashboardData();
+    } catch (err: any) {
+      setServiceActionFeedback(err.message || 'Enrollment failed.');
+    }
+  };
+
+  const handleUpdateProgress = async (enrollmentId: string, currentProgress: number) => {
+    setUpdatingEnrollmentId(enrollmentId);
+    setServiceActionFeedback(null);
+    try {
+      const nextProgress = Math.min(100, currentProgress + 25);
+      await api.updateLearningProgress(enrollmentId, nextProgress);
+      setServiceActionFeedback(nextProgress === 100 ? 'Milestone achieved! Course completed.' : `Progress updated to ${nextProgress}%`);
+      loadDashboardData();
+    } catch (err: any) {
+      setServiceActionFeedback(err.message || 'Progress update failed.');
+    } finally {
+      setUpdatingEnrollmentId(null);
+    }
+  };
+
+  const handleJoinCommunity = async (communityId: string) => {
+    setServiceActionFeedback(null);
+    try {
+      const res = await api.joinCommunity(communityId);
+      setServiceActionFeedback(res.status === 'active' ? 'Successfully joined community!' : 'Membership request submitted for moderator review.');
+      loadDashboardData();
+    } catch (err: any) {
+      setServiceActionFeedback(err.message || 'Failed to join community.');
+    }
+  };
+
+  const handleMarkNotificationRead = async (notifId: string) => {
+    try {
+      await api.markNotificationAsRead(notifId);
+      loadDashboardData();
+    } catch (err: any) {
+      console.warn('Failed to mark read', err);
+    }
+  };
+
+  const handleDecideVerification = async (requestId: string, decision: 'approved' | 'rejected') => {
+    setServiceActionFeedback(null);
+    try {
+      await api.decideVerification(requestId, decision);
+      setServiceActionFeedback(`Verification request ${decision}.`);
+      loadDashboardData();
+    } catch (err: any) {
+      setServiceActionFeedback(err.message || 'Failed to update verification request.');
     }
   };
 
@@ -303,6 +399,218 @@ export default function DashboardScreen() {
             </View>
           ))}
         </View>
+      </View>
+
+      {/* Phase 4: Extended Services Hub */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Extended Services Hub</Text>
+          {unreadNotifCount > 0 && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadBadgeText}>{unreadNotifCount} New</Text>
+            </View>
+          )}
+        </View>
+
+        {serviceActionFeedback && (
+          <View style={styles.feedbackBanner}>
+            <Text style={styles.feedbackText}>{serviceActionFeedback}</Text>
+          </View>
+        )}
+
+        {/* Tab Controls */}
+        <View style={styles.hubTabRow}>
+          <TouchableOpacity
+            style={[styles.hubTabButton, activeServicesTab === 'learning' && styles.hubTabButtonActive]}
+            onPress={() => setActiveServicesTab('learning')}
+          >
+            <Text style={[styles.hubTabText, activeServicesTab === 'learning' && styles.hubTabTextActive]}>
+              🎓 Learning
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.hubTabButton, activeServicesTab === 'communities' && styles.hubTabButtonActive]}
+            onPress={() => setActiveServicesTab('communities')}
+          >
+            <Text style={[styles.hubTabText, activeServicesTab === 'communities' && styles.hubTabTextActive]}>
+              👥 Groups
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.hubTabButton, activeServicesTab === 'notifications' && styles.hubTabButtonActive]}
+            onPress={() => setActiveServicesTab('notifications')}
+          >
+            <Text style={[styles.hubTabText, activeServicesTab === 'notifications' && styles.hubTabTextActive]}>
+              🔔 Alert ({unreadNotifCount})
+            </Text>
+          </TouchableOpacity>
+
+          {(primaryRole === 'admin' || user?.roles?.includes('admin') || user?.roles?.includes('institutional_admin')) && (
+            <TouchableOpacity
+              style={[styles.hubTabButton, activeServicesTab === 'admin' && styles.hubTabButtonActive]}
+              onPress={() => setActiveServicesTab('admin')}
+            >
+              <Text style={[styles.hubTabText, activeServicesTab === 'admin' && styles.hubTabTextActive]}>
+                🛡️ Admin ({pendingVerifications.length})
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Tab Content: Learning */}
+        {activeServicesTab === 'learning' && (
+          <View style={styles.hubContentBox}>
+            <Text style={styles.hubSubheader}>Course Catalog & Progress</Text>
+            {userEnrollments.length > 0 && (
+              <View style={styles.enrollmentSection}>
+                <Text style={styles.enrollmentSectionTitle}>My Active Enrollments:</Text>
+                {userEnrollments.map((enr) => (
+                  <View key={enr.id} style={styles.enrollmentCard}>
+                    <View style={styles.enrollmentMeta}>
+                      <Text style={styles.enrollmentTitle}>{enr.course_title}</Text>
+                      <Text style={styles.enrollmentStatusBadge}>
+                        {enr.status.toUpperCase()} ({enr.progress_percentage}%)
+                      </Text>
+                    </View>
+                    <View style={styles.progressBarTrack}>
+                      <View style={[styles.progressBarFill, { width: `${enr.progress_percentage}%` }]} />
+                    </View>
+                    {enr.status !== 'completed' && (
+                      <TouchableOpacity
+                        style={styles.progressBtn}
+                        onPress={() => handleUpdateProgress(enr.id, enr.progress_percentage)}
+                        disabled={updatingEnrollmentId === enr.id}
+                      >
+                        <Text style={styles.progressBtnText}>
+                          {updatingEnrollmentId === enr.id ? 'Saving...' : 'Mark +25% Progress'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {learningCourses.slice(0, 3).map((course) => {
+              const isEnrolled = userEnrollments.some((e) => e.resource_id === course.resource_id);
+              return (
+                <View key={course.resource_id} style={styles.courseItemCard}>
+                  <View style={styles.courseItemHeader}>
+                    <Text style={styles.courseItemTitle}>{course.title}</Text>
+                    <Text style={styles.courseDifficultyBadge}>{course.difficulty}</Text>
+                  </View>
+                  <Text style={styles.courseProvider}>
+                    {course.provider} • {course.target_skill} • {course.duration_hours}h
+                  </Text>
+                  {!isEnrolled ? (
+                    <TouchableOpacity
+                      style={styles.enrollBtn}
+                      onPress={() => handleEnrollCourse(course.resource_id)}
+                    >
+                      <Text style={styles.enrollBtnText}>Enroll Free</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <Text style={styles.alreadyEnrolledText}>✓ Enrolled</Text>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Tab Content: Communities */}
+        {activeServicesTab === 'communities' && (
+          <View style={styles.hubContentBox}>
+            <Text style={styles.hubSubheader}>MSGI Guilds & Interest Groups</Text>
+            {communities.map((comm) => (
+              <View key={comm.id} style={styles.communityCard}>
+                <View style={styles.communityHeaderRow}>
+                  <Text style={styles.communityName}>{comm.name}</Text>
+                  {comm.is_private && (
+                    <View style={styles.privateBadge}>
+                      <Text style={styles.privateBadgeText}>PRIVATE</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.communityDesc}>{comm.description}</Text>
+                <View style={styles.communityFooterRow}>
+                  <Text style={styles.communityMembersText}>👥 {comm.member_count} Members</Text>
+                  {comm.is_member ? (
+                    <Text style={styles.joinedBadgeText}>✓ Member</Text>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.joinCommBtn}
+                      onPress={() => handleJoinCommunity(comm.id)}
+                    >
+                      <Text style={styles.joinCommBtnText}>{comm.is_private ? 'Request Access' : 'Join Group'}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Tab Content: Notifications */}
+        {activeServicesTab === 'notifications' && (
+          <View style={styles.hubContentBox}>
+            <Text style={styles.hubSubheader}>Realtime Alerts</Text>
+            {notifications.length === 0 ? (
+              <Text style={styles.emptyText}>No notifications at this time.</Text>
+            ) : (
+              notifications.slice(0, 4).map((notif) => (
+                <View key={notif.id} style={[styles.notifCard, !notif.is_read && styles.notifCardUnread]}>
+                  <View style={styles.notifHeader}>
+                    <Text style={styles.notifTitle}>{notif.title}</Text>
+                    {!notif.is_read && (
+                      <TouchableOpacity
+                        style={styles.markReadBtn}
+                        onPress={() => handleMarkNotificationRead(notif.id)}
+                      >
+                        <Text style={styles.markReadBtnText}>Mark Read</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  <Text style={styles.notifMessage}>{notif.message}</Text>
+                  <Text style={styles.notifTime}>{new Date(notif.created_at).toLocaleTimeString()}</Text>
+                </View>
+              ))
+            )}
+          </View>
+        )}
+
+        {/* Tab Content: Admin */}
+        {activeServicesTab === 'admin' && (
+          <View style={styles.hubContentBox}>
+            <Text style={styles.hubSubheader}>Institutional Credential Verification</Text>
+            {pendingVerifications.length === 0 ? (
+              <Text style={styles.emptyText}>All verification requests have been processed.</Text>
+            ) : (
+              pendingVerifications.map((vReq) => (
+                <View key={vReq.id} style={styles.adminReqCard}>
+                  <Text style={styles.adminReqUser}>{vReq.user_name} ({vReq.user_email})</Text>
+                  <Text style={styles.adminReqRole}>Requested Role: {vReq.requested_role.toUpperCase()}</Text>
+                  <View style={styles.adminActionRow}>
+                    <TouchableOpacity
+                      style={[styles.adminBtn, styles.approveBtn]}
+                      onPress={() => handleDecideVerification(vReq.id, 'approved')}
+                    >
+                      <Text style={styles.adminBtnText}>Approve</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.adminBtn, styles.rejectBtn]}
+                      onPress={() => handleDecideVerification(vReq.id, 'rejected')}
+                    >
+                      <Text style={styles.adminBtnText}>Reject</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
+        )}
       </View>
 
       {/* Mentorship Request Modal Sheet */}
@@ -832,5 +1140,307 @@ const styles = StyleSheet.create({
   closeBtnText: {
     color: Colors.textSecondary,
     fontSize: Typography.fontSize.xs,
+  },
+  unreadBadge: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.full,
+  },
+  unreadBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  hubTabRow: {
+    flexDirection: 'row',
+    backgroundColor: '#E2E8F0',
+    borderRadius: BorderRadius.md,
+    padding: 3,
+    marginBottom: Spacing.md,
+  },
+  hubTabButton: {
+    flex: 1,
+    paddingVertical: Spacing.xs,
+    alignItems: 'center',
+    borderRadius: BorderRadius.sm,
+  },
+  hubTabButtonActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  hubTabText: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+  },
+  hubTabTextActive: {
+    color: Colors.primary,
+    fontWeight: 'bold',
+  },
+  hubContentBox: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  hubSubheader: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginBottom: Spacing.sm,
+  },
+  enrollmentSection: {
+    marginBottom: Spacing.md,
+    backgroundColor: '#F8FAFC',
+    borderRadius: BorderRadius.sm,
+    padding: Spacing.sm,
+  },
+  enrollmentSectionTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xs,
+  },
+  enrollmentCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: BorderRadius.sm,
+    padding: Spacing.sm,
+    marginBottom: Spacing.xs,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  enrollmentMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  enrollmentTitle: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: '600',
+    color: Colors.text,
+    flex: 1,
+  },
+  enrollmentStatusBadge: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: Colors.primary,
+  },
+  progressBarTrack: {
+    height: 6,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginVertical: 4,
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#10B981',
+  },
+  progressBtn: {
+    backgroundColor: '#E0F2FE',
+    borderRadius: BorderRadius.xs,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+  },
+  progressBtnText: {
+    fontSize: 10,
+    color: '#0369A1',
+    fontWeight: '600',
+  },
+  courseItemCard: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    paddingVertical: Spacing.xs,
+  },
+  courseItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  courseItemTitle: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: 'bold',
+    color: Colors.text,
+    flex: 1,
+  },
+  courseDifficultyBadge: {
+    fontSize: 9,
+    color: '#0F766E',
+    backgroundColor: '#CCFBF1',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  courseProvider: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    marginVertical: 2,
+  },
+  enrollBtn: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.xs,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    alignSelf: 'flex-start',
+    marginTop: 2,
+  },
+  enrollBtnText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  alreadyEnrolledText: {
+    fontSize: 10,
+    color: '#10B981',
+    fontWeight: 'bold',
+    marginTop: 2,
+  },
+  communityCard: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    paddingVertical: Spacing.xs,
+  },
+  communityHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  communityName: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: 'bold',
+    color: Colors.text,
+    flex: 1,
+  },
+  privateBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  privateBadgeText: {
+    fontSize: 9,
+    color: '#92400E',
+    fontWeight: 'bold',
+  },
+  communityDesc: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    marginVertical: 2,
+  },
+  communityFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  communityMembersText: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+  },
+  joinedBadgeText: {
+    fontSize: 10,
+    color: '#10B981',
+    fontWeight: 'bold',
+  },
+  joinCommBtn: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.xs,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+  },
+  joinCommBtnText: {
+    fontSize: 10,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  notifCard: {
+    paddingVertical: Spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  notifCardUnread: {
+    backgroundColor: '#FEF9C3',
+    padding: Spacing.xs,
+    borderRadius: BorderRadius.xs,
+    marginBottom: 4,
+  },
+  notifHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  notifTitle: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: 'bold',
+    color: Colors.text,
+    flex: 1,
+  },
+  markReadBtn: {
+    backgroundColor: '#E2E8F0',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  markReadBtnText: {
+    fontSize: 9,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+  },
+  notifMessage: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    marginVertical: 2,
+  },
+  notifTime: {
+    fontSize: 9,
+    color: '#94A3B8',
+  },
+  adminReqCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: BorderRadius.xs,
+    padding: Spacing.xs,
+    marginBottom: Spacing.xs,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  adminReqUser: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: 'bold',
+    color: Colors.text,
+  },
+  adminReqRole: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    marginVertical: 2,
+  },
+  adminActionRow: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    marginTop: 4,
+  },
+  adminBtn: {
+    flex: 1,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.xs,
+    alignItems: 'center',
+  },
+  approveBtn: {
+    backgroundColor: '#10B981',
+  },
+  rejectBtn: {
+    backgroundColor: '#EF4444',
+  },
+  adminBtnText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });
