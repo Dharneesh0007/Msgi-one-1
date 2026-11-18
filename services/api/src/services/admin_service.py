@@ -4,8 +4,11 @@ Manages credential verification queues, role provisioning, and audit logs.
 Principles: Silberschatz Security Access Control & Pressman Quality Oversight.
 """
 
+import csv
+import json
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, Any, List, Optional
 from fastapi import HTTPException, status
 from pydantic import BaseModel, Field
@@ -13,6 +16,15 @@ from pydantic import BaseModel, Field
 from src.core.dependencies import AuthenticatedUser
 from src.services.notifications_service import create_notification
 from src.services.alumni_service import _SYNTHETIC_ALUMNI_STORE
+
+
+# Path to seed CSVs
+_SEED_DIR = Path(__file__).resolve().parents[4] / "supabase" / "seed" / "csv"
+if not _SEED_DIR.exists():
+    for p in Path(__file__).resolve().parents:
+        if (p / "supabase" / "seed" / "csv").exists():
+            _SEED_DIR = p / "supabase" / "seed" / "csv"
+            break
 
 
 class VerificationRequestItem(BaseModel):
@@ -48,27 +60,55 @@ class AdminSummaryResponse(BaseModel):
     active_mentors_count: int
 
 
+def _load_all_verification_requests() -> List[Dict[str, Any]]:
+    csv_file = _SEED_DIR / "verification_requests.csv"
+    if not csv_file.exists():
+        return [
+            {
+                "id": "vreq-001",
+                "user_id": "user-candidate-001",
+                "user_email": "candidate.alumni@example.msgi.edu",
+                "user_name": "Daiki Shimizu",
+                "requested_role": "alumni",
+                "evidence_payload": {
+                    "graduation_year": 2023,
+                    "degree": "B.Tech Computer Science",
+                    "student_id_verified": True,
+                    "diploma_url": "https://credentials.example.msgi.edu/verify/daiki-2023",
+                },
+                "status": "pending",
+                "reviewed_by": None,
+                "review_notes": None,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "decided_at": None,
+            }
+        ]
+    results = []
+    with open(csv_file, mode="r", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            evidence = {}
+            try:
+                evidence = json.loads(row.get("evidence_payload", "{}"))
+            except Exception:
+                pass
+            results.append({
+                "id": row["request_id"],
+                "user_id": row["user_id"],
+                "user_email": row["user_email"],
+                "user_name": row["user_name"],
+                "requested_role": row["requested_role"],
+                "evidence_payload": evidence,
+                "status": row["status"],
+                "reviewed_by": None,
+                "review_notes": None,
+                "created_at": row["created_at"],
+                "decided_at": None,
+            })
+    return results
+
+
 # In-memory stores conforming to public.verification_requests and public.admin_audit_logs
-_VERIFICATION_REQUESTS_STORE: List[Dict[str, Any]] = [
-    {
-        "id": "vreq-001",
-        "user_id": "user-candidate-001",
-        "user_email": "candidate.alumni@example.msgi.edu",
-        "user_name": "Daiki Shimizu",
-        "requested_role": "alumni",
-        "evidence_payload": {
-            "graduation_year": 2023,
-            "degree": "B.Tech Computer Science",
-            "student_id_verified": True,
-            "diploma_url": "https://credentials.example.msgi.edu/verify/daiki-2023",
-        },
-        "status": "pending",
-        "reviewed_by": None,
-        "review_notes": None,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "decided_at": None,
-    }
-]
+_VERIFICATION_REQUESTS_STORE: List[Dict[str, Any]] = _load_all_verification_requests()
 
 _ADMIN_AUDIT_LOGS_STORE: List[Dict[str, Any]] = [
     {

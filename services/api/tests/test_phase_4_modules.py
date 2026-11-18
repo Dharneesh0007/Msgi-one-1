@@ -352,6 +352,51 @@ def test_two_client_realtime_event_propagation(student_user, alumni_user):
 # 5. EXTENDED MODULES (PROJECTS, STARTUPS, GIVING/IMPACT) TESTS
 # -----------------------------------------------------------------------------
 
+def test_synthetic_dataset_fixture_counts(admin_user):
+    """
+    Verifies that all Phase 4 development fixtures meet the exact count specifications:
+    - 6 communities (including public and private groups)
+    - 12 example community memberships and pending join requests
+    - 5 pending institutional verification requests mapped to existing test accounts (none auto-approved)
+    - 6 collaboration projects with realistic technical skills
+    - 5 fictional startups and founder profiles
+    - 4 volunteering or social impact programmes (no payments)
+    """
+    # 1. Communities (6: 4 public, 2 private)
+    all_comms = list_communities(user=admin_user)
+    assert len(all_comms) == 6
+    public_comms = [c for c in all_comms if not c.is_private]
+    private_comms = [c for c in all_comms if c.is_private]
+    assert len(public_comms) == 4
+    assert len(private_comms) == 2
+
+    # 2. Community Memberships (12)
+    assert len(_COMMUNITY_MEMBERSHIPS_STORE) >= 12
+    pending_mems = [m for m in _COMMUNITY_MEMBERSHIPS_STORE if m["status"] == "pending"]
+    assert len(pending_mems) >= 2
+
+    # 3. Pending Verification Requests (5, none auto-approved)
+    pending_verifs = list_pending_verifications(admin_user)
+    assert len(pending_verifs) >= 5
+    assert all(pv.status == "pending" for pv in pending_verifs)
+
+    # 4. Collaboration Projects (6)
+    projects = list_projects()
+    assert len(projects) == 6
+    assert all(len(p.required_skills) >= 3 for p in projects)
+
+    # 5. Fictional Startups (5)
+    startups = list_startups()
+    assert len(startups) == 5
+    assert all(s.is_verified is True for s in startups)
+
+    # 6. Impact Programmes (4, volunteering only)
+    impact_progs = list_impact_programmes()
+    assert len(impact_progs) == 4
+    assert all(hasattr(p, "target_volunteers") for p in impact_progs)
+    assert all(not hasattr(p, "funds_raised") for p in impact_progs)
+
+
 def test_projects_join_and_duplicate_prevention(student_user):
     projects = list_projects(skill="Python")
     assert len(projects) >= 1

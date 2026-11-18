@@ -97,15 +97,15 @@ def main():
 
     steps = [
         (
-            "1. Validate Synthetic CSV Ingestion",
-            ["uv", "run", "--offline", "--no-sync", "--project", "services/api", "python", "scripts/import_synthetic_data.py"],
+            "1. Validate Synthetic CSV Ingestion (11 Datasets with Dry-Run)",
+            ["uv", "run", "--offline", "--no-sync", "--project", "services/api", "python", "scripts/import_synthetic_data.py", "--dry-run"],
         ),
         (
             "2. Run AI Command Centre 15-Scenario Evaluation Suite",
             ["uv", "run", "--offline", "--no-sync", "--project", "services/api", "python", "services/api/src/ai/evaluation.py"],
         ),
         (
-            "3. Run Full Pytest Regression Suite (79 Tests across Phase 1-4)",
+            "3. Run Full Pytest Regression Suite (80 Tests across Phase 1-4)",
             ["uv", "run", "--offline", "--no-sync", "--project", "services/api", "pytest", "services/api/tests", "-q"],
         ),
     ]

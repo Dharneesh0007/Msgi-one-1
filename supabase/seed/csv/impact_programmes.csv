@@ -1,0 +1,5 @@
+programme_id,title,description,coordinator_name,programme_type,target_volunteers,current_volunteers,is_active,created_at
+impact-stem-001,MSGI STEM Youth Outreach & Coding Mentorship,Alumni-led weekend computational thinking and Python workshops for underprivileged high school students.,MSGI Community Foundation,volunteering,25,14,true,2026-08-15T00:00:00Z
+impact-sustain-002,Green Campus Solar & Urban Reforestation Drive,Collaborative biodiversity and clean energy auditing drive across institutional campus sites.,MSGI Sustainability Office,volunteering,50,38,true,2026-09-01T00:00:00Z
+impact-mock-003,Alumni Mock Technical Interview Marathon,Senior alumni volunteer two hours to conduct live technical mock interviews for graduating students.,MSGI Career Placement Cell,mentorship_drive,30,22,true,2026-09-20T00:00:00Z
+impact-civic-004,Disaster Preparedness Open Data Initiative,Open-source geospatial mapping and sensor calibration drive for municipal flood resilience.,MSGI Civic Technology Lab,community_outreach,40,19,true,2026-10-10T00:00:00Z

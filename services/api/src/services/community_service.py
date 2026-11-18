@@ -4,14 +4,25 @@ Manages interest groups, public/private access controls, and moderation workflow
 Principles: Evans Bounded Contexts & Silberschatz Access Control.
 """
 
+import csv
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, Any, List, Optional
 from fastapi import HTTPException, status
 from pydantic import BaseModel, Field
 
 from src.core.dependencies import AuthenticatedUser
 from src.services.notifications_service import create_notification
+
+
+# Path to seed CSVs
+_SEED_DIR = Path(__file__).resolve().parents[4] / "supabase" / "seed" / "csv"
+if not _SEED_DIR.exists():
+    for p in Path(__file__).resolve().parents:
+        if (p / "supabase" / "seed" / "csv").exists():
+            _SEED_DIR = p / "supabase" / "seed" / "csv"
+            break
 
 
 class CommunityItem(BaseModel):
@@ -39,66 +50,106 @@ class CommunityMembershipItem(BaseModel):
     joined_at: str
 
 
-# In-memory stores conforming to public.communities and public.community_memberships
-_COMMUNITIES_STORE: List[Dict[str, Any]] = [
-    {
-        "id": "comm-ai-001",
-        "name": "MSGI AI & Robotics Guild",
-        "slug": "msgi-ai-robotics",
-        "description": "Cross-disciplinary community for students and alumni building embodied AI, LLMs, and ROS systems.",
-        "category": "Technology",
-        "is_private": False,
-        "creator_id": "user-kenji-001",
-        "member_count": 48,
-        "topics": ["AI", "Robotics", "Python", "ROS 2"],
-        "created_at": "2026-09-01T00:00:00Z",
-    },
-    {
-        "id": "comm-cloud-002",
-        "name": "Cloud Native & DevOps Practitioners",
-        "slug": "cloud-native-devops",
-        "description": "Architectural discussions on Kubernetes, Terraform, and high-availability cloud platforms.",
-        "category": "Technology",
-        "is_private": False,
-        "creator_id": "user-ananya-002",
-        "member_count": 32,
-        "topics": ["Cloud", "Kubernetes", "DevOps"],
-        "created_at": "2026-09-15T00:00:00Z",
-    },
-    {
-        "id": "comm-exec-003",
-        "name": "Alumni Founders & Executive Circle (Private)",
-        "slug": "alumni-founders-circle",
-        "description": "Private advisory council for vetted alumni startup founders and senior executives.",
-        "category": "Entrepreneurship",
-        "is_private": True,
-        "creator_id": "user-admin-001",
-        "member_count": 12,
-        "topics": ["Ventures", "Leadership", "Funding"],
-        "created_at": "2026-10-01T00:00:00Z",
-    },
-]
+def _load_all_communities() -> List[Dict[str, Any]]:
+    csv_file = _SEED_DIR / "communities.csv"
+    if not csv_file.exists():
+        return [
+            {
+                "id": "comm-ai-001",
+                "name": "MSGI AI & Robotics Guild",
+                "slug": "msgi-ai-robotics",
+                "description": "Cross-disciplinary community for students and alumni building embodied AI, LLMs, and ROS systems.",
+                "category": "Technology",
+                "is_private": False,
+                "creator_id": "user-kenji-001",
+                "member_count": 48,
+                "topics": ["AI", "Robotics", "Python", "ROS 2"],
+                "created_at": "2026-09-01T00:00:00Z",
+            },
+            {
+                "id": "comm-cloud-002",
+                "name": "Cloud Native & DevOps Practitioners",
+                "slug": "cloud-native-devops",
+                "description": "Architectural discussions on Kubernetes, Terraform, and high-availability cloud platforms.",
+                "category": "Technology",
+                "is_private": False,
+                "creator_id": "user-ananya-002",
+                "member_count": 32,
+                "topics": ["Cloud", "Kubernetes", "DevOps"],
+                "created_at": "2026-09-15T00:00:00Z",
+            },
+            {
+                "id": "comm-exec-003",
+                "name": "Alumni Founders & Executive Circle (Private)",
+                "slug": "alumni-founders-circle",
+                "description": "Private advisory council for vetted alumni startup founders and senior executives.",
+                "category": "Entrepreneurship",
+                "is_private": True,
+                "creator_id": "user-admin-001",
+                "member_count": 12,
+                "topics": ["Ventures", "Leadership", "Funding"],
+                "created_at": "2026-10-01T00:00:00Z",
+            },
+        ]
+    results = []
+    with open(csv_file, mode="r", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            results.append({
+                "id": row["community_id"],
+                "name": row["name"],
+                "slug": row["slug"],
+                "description": row["description"],
+                "category": row["category"],
+                "is_private": row["is_private"].strip().lower() == "true",
+                "creator_id": row["creator_id"],
+                "member_count": int(row.get("member_count", 0)),
+                "topics": [t.strip() for t in row.get("topics", "").split(";") if t.strip()],
+                "created_at": row["created_at"],
+            })
+    return results
 
-_COMMUNITY_MEMBERSHIPS_STORE: List[Dict[str, Any]] = [
-    {
-        "id": "cm-001",
-        "community_id": "comm-ai-001",
-        "community_name": "MSGI AI & Robotics Guild",
-        "user_id": "user-kenji-001",
-        "role": "moderator",
-        "status": "active",
-        "joined_at": "2026-09-01T00:00:00Z",
-    },
-    {
-        "id": "cm-002",
-        "community_id": "comm-exec-003",
-        "community_name": "Alumni Founders & Executive Circle (Private)",
-        "user_id": "user-admin-001",
-        "role": "moderator",
-        "status": "active",
-        "joined_at": "2026-10-01T00:00:00Z",
-    },
-]
+
+def _load_all_memberships() -> List[Dict[str, Any]]:
+    csv_file = _SEED_DIR / "community_memberships.csv"
+    if not csv_file.exists():
+        return [
+            {
+                "id": "cm-001",
+                "community_id": "comm-ai-001",
+                "community_name": "MSGI AI & Robotics Guild",
+                "user_id": "user-kenji-001",
+                "role": "moderator",
+                "status": "active",
+                "joined_at": "2026-09-01T00:00:00Z",
+            },
+            {
+                "id": "cm-002",
+                "community_id": "comm-exec-003",
+                "community_name": "Alumni Founders & Executive Circle (Private)",
+                "user_id": "user-admin-001",
+                "role": "moderator",
+                "status": "active",
+                "joined_at": "2026-10-01T00:00:00Z",
+            },
+        ]
+    results = []
+    with open(csv_file, mode="r", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            results.append({
+                "id": row["membership_id"],
+                "community_id": row["community_id"],
+                "community_name": row["community_name"],
+                "user_id": row["user_id"],
+                "role": row["role"],
+                "status": row["status"],
+                "joined_at": row["joined_at"],
+            })
+    return results
+
+
+# In-memory stores conforming to public.communities and public.community_memberships
+_COMMUNITIES_STORE: List[Dict[str, Any]] = _load_all_communities()
+_COMMUNITY_MEMBERSHIPS_STORE: List[Dict[str, Any]] = _load_all_memberships()
 
 
 def list_communities(

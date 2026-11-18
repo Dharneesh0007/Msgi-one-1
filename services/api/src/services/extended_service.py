@@ -7,14 +7,25 @@ Modules:
 Principles: Evans Bounded Contexts & Sommerville Traceability.
 """
 
+import csv
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, Any, List, Optional
 from fastapi import HTTPException, status
 from pydantic import BaseModel, Field
 
 from src.core.dependencies import AuthenticatedUser
 from src.services.notifications_service import create_notification
+
+
+# Path to seed CSVs
+_SEED_DIR = Path(__file__).resolve().parents[4] / "supabase" / "seed" / "csv"
+if not _SEED_DIR.exists():
+    for p in Path(__file__).resolve().parents:
+        if (p / "supabase" / "seed" / "csv").exists():
+            _SEED_DIR = p / "supabase" / "seed" / "csv"
+            break
 
 
 # -----------------------------------------------------------------------------
@@ -44,30 +55,51 @@ class ProjectMemberItem(BaseModel):
     created_at: str
 
 
-_PROJECTS_STORE: List[Dict[str, Any]] = [
-    {
-        "id": "proj-agentic-001",
-        "title": "Autonomous Agricultural Drone Perception Pipeline",
-        "description": "Multi-spectral computer vision models for automated crop yield estimation and pest detection.",
-        "owner_id": "user-kenji-001",
-        "owner_name": "Kenji Sato",
-        "required_skills": ["Python", "PyTorch", "ROS 2", "Edge AI"],
-        "status": "active",
-        "member_count": 4,
-        "created_at": "2026-09-10T00:00:00Z",
-    },
-    {
-        "id": "proj-health-002",
-        "title": "Decentralized Clinical Trial Data Exchange",
-        "description": "Privacy-preserving zero-knowledge verification for multi-institutional health analytics.",
-        "owner_id": "user-ananya-002",
-        "owner_name": "Ananya Sharma",
-        "required_skills": ["TypeScript", "FastAPI", "Cryptography"],
-        "status": "active",
-        "member_count": 3,
-        "created_at": "2026-10-01T00:00:00Z",
-    },
-]
+def _load_all_projects() -> List[Dict[str, Any]]:
+    csv_file = _SEED_DIR / "projects.csv"
+    if not csv_file.exists():
+        return [
+            {
+                "id": "proj-agentic-001",
+                "title": "Autonomous Agricultural Drone Perception Pipeline",
+                "description": "Multi-spectral computer vision models for automated crop yield estimation and pest detection.",
+                "owner_id": "user-kenji-001",
+                "owner_name": "Kenji Sato",
+                "required_skills": ["Python", "PyTorch", "ROS 2", "Edge AI"],
+                "status": "active",
+                "member_count": 4,
+                "created_at": "2026-09-10T00:00:00Z",
+            },
+            {
+                "id": "proj-health-002",
+                "title": "Decentralized Clinical Trial Data Exchange",
+                "description": "Privacy-preserving zero-knowledge verification for multi-institutional health analytics.",
+                "owner_id": "user-ananya-002",
+                "owner_name": "Ananya Sharma",
+                "required_skills": ["TypeScript", "FastAPI", "Cryptography"],
+                "status": "active",
+                "member_count": 3,
+                "created_at": "2026-10-01T00:00:00Z",
+            },
+        ]
+    results = []
+    with open(csv_file, mode="r", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            results.append({
+                "id": row["project_id"],
+                "title": row["title"],
+                "description": row["description"],
+                "owner_id": row["owner_id"],
+                "owner_name": row["owner_name"],
+                "required_skills": [s.strip() for s in row.get("required_skills", "").split(";") if s.strip()],
+                "status": row["status"],
+                "member_count": int(row.get("member_count", 1)),
+                "created_at": row["created_at"],
+            })
+    return results
+
+
+_PROJECTS_STORE: List[Dict[str, Any]] = _load_all_projects()
 
 _PROJECT_MEMBERS_STORE: List[Dict[str, Any]] = [
     {
@@ -176,36 +208,60 @@ class StartupConnectionItem(BaseModel):
     created_at: str
 
 
-_STARTUPS_STORE: List[Dict[str, Any]] = [
-    {
-        "id": "start-neural-001",
-        "name": "NeuralFlow Dynamics",
-        "founder_id": "user-kenji-001",
-        "founder_name": "Kenji Sato",
-        "industry": "Artificial Intelligence",
-        "stage": "seed",
-        "tagline": "Real-time robotics inference acceleration using customized compiler toolchains.",
-        "website_url": "https://neuralflow.example.msgi.edu",
-        "seeking_mentors": True,
-        "seeking_talent": True,
-        "is_verified": True,
-        "created_at": "2026-08-01T00:00:00Z",
-    },
-    {
-        "id": "start-agri-002",
-        "name": "VerdantSense Systems",
-        "founder_id": "user-ananya-002",
-        "founder_name": "Ananya Sharma",
-        "industry": "CleanTech / AgTech",
-        "stage": "early",
-        "tagline": "Precision satellite soil telemetry for regenerative farming collectives.",
-        "website_url": "https://verdantsense.example.msgi.edu",
-        "seeking_mentors": True,
-        "seeking_talent": False,
-        "is_verified": True,
-        "created_at": "2026-09-01T00:00:00Z",
-    },
-]
+def _load_all_startups() -> List[Dict[str, Any]]:
+    csv_file = _SEED_DIR / "startups.csv"
+    if not csv_file.exists():
+        return [
+            {
+                "id": "start-neural-001",
+                "name": "NeuralFlow Dynamics",
+                "founder_id": "user-kenji-001",
+                "founder_name": "Kenji Sato",
+                "industry": "Artificial Intelligence",
+                "stage": "seed",
+                "tagline": "Real-time robotics inference acceleration using customized compiler toolchains.",
+                "website_url": "https://neuralflow.example.msgi.edu",
+                "seeking_mentors": True,
+                "seeking_talent": True,
+                "is_verified": True,
+                "created_at": "2026-08-01T00:00:00Z",
+            },
+            {
+                "id": "start-agri-002",
+                "name": "VerdantSense Systems",
+                "founder_id": "user-ananya-002",
+                "founder_name": "Ananya Sharma",
+                "industry": "CleanTech / AgTech",
+                "stage": "early",
+                "tagline": "Precision satellite soil telemetry for regenerative farming collectives.",
+                "website_url": "https://verdantsense.example.msgi.edu",
+                "seeking_mentors": True,
+                "seeking_talent": False,
+                "is_verified": True,
+                "created_at": "2026-09-01T00:00:00Z",
+            },
+        ]
+    results = []
+    with open(csv_file, mode="r", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            results.append({
+                "id": row["startup_id"],
+                "name": row["name"],
+                "founder_id": row["founder_id"],
+                "founder_name": row["founder_name"],
+                "industry": row["industry"],
+                "stage": row["stage"],
+                "tagline": row["tagline"],
+                "website_url": row.get("website_url"),
+                "seeking_mentors": row.get("seeking_mentors", "").strip().lower() == "true",
+                "seeking_talent": row.get("seeking_talent", "").strip().lower() == "true",
+                "is_verified": row.get("is_verified", "").strip().lower() == "true",
+                "created_at": row["created_at"],
+            })
+    return results
+
+
+_STARTUPS_STORE: List[Dict[str, Any]] = _load_all_startups()
 
 _STARTUP_CONNECTIONS_STORE: List[Dict[str, Any]] = []
 
@@ -299,30 +355,51 @@ class VolunteerInterestItem(BaseModel):
     created_at: str
 
 
-_IMPACT_PROGRAMMES_STORE: List[Dict[str, Any]] = [
-    {
-        "id": "impact-stem-001",
-        "title": "MSGI STEM Youth Outreach & Coding Mentorship",
-        "description": "Alumni-led weekend computational thinking and Python workshops for underprivileged high school students.",
-        "coordinator_name": "MSGI Community Foundation",
-        "programme_type": "volunteering",
-        "target_volunteers": 25,
-        "current_volunteers": 14,
-        "is_active": True,
-        "created_at": "2026-08-15T00:00:00Z",
-    },
-    {
-        "id": "impact-sustain-002",
-        "title": "Green Campus Solar & Urban Reforestation Drive",
-        "description": "Collaborative biodiversity and clean energy auditing drive across institutional campus sites.",
-        "coordinator_name": "MSGI Sustainability Office",
-        "programme_type": "volunteering",
-        "target_volunteers": 50,
-        "current_volunteers": 38,
-        "is_active": True,
-        "created_at": "2026-09-01T00:00:00Z",
-    },
-]
+def _load_all_impact_programmes() -> List[Dict[str, Any]]:
+    csv_file = _SEED_DIR / "impact_programmes.csv"
+    if not csv_file.exists():
+        return [
+            {
+                "id": "impact-stem-001",
+                "title": "MSGI STEM Youth Outreach & Coding Mentorship",
+                "description": "Alumni-led weekend computational thinking and Python workshops for underprivileged high school students.",
+                "coordinator_name": "MSGI Community Foundation",
+                "programme_type": "volunteering",
+                "target_volunteers": 25,
+                "current_volunteers": 14,
+                "is_active": True,
+                "created_at": "2026-08-15T00:00:00Z",
+            },
+            {
+                "id": "impact-sustain-002",
+                "title": "Green Campus Solar & Urban Reforestation Drive",
+                "description": "Collaborative biodiversity and clean energy auditing drive across institutional campus sites.",
+                "coordinator_name": "MSGI Sustainability Office",
+                "programme_type": "volunteering",
+                "target_volunteers": 50,
+                "current_volunteers": 38,
+                "is_active": True,
+                "created_at": "2026-09-01T00:00:00Z",
+            },
+        ]
+    results = []
+    with open(csv_file, mode="r", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            results.append({
+                "id": row["programme_id"],
+                "title": row["title"],
+                "description": row["description"],
+                "coordinator_name": row["coordinator_name"],
+                "programme_type": row["programme_type"],
+                "target_volunteers": int(row.get("target_volunteers", 20)),
+                "current_volunteers": int(row.get("current_volunteers", 0)),
+                "is_active": row.get("is_active", "").strip().lower() == "true",
+                "created_at": row["created_at"],
+            })
+    return results
+
+
+_IMPACT_PROGRAMMES_STORE: List[Dict[str, Any]] = _load_all_impact_programmes()
 
 _VOLUNTEER_INTERESTS_STORE: List[Dict[str, Any]] = []
 

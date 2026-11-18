@@ -1,0 +1,13 @@
+membership_id,community_id,community_name,user_id,role,status,joined_at
+cm-001,comm-ai-001,MSGI AI & Robotics Guild,user-kenji-001,moderator,active,2026-09-01T00:00:00Z
+cm-002,comm-cloud-002,Cloud Native & DevOps Practitioners,user-ananya-002,moderator,active,2026-09-15T00:00:00Z
+cm-003,comm-exec-003,Alumni Founders & Executive Circle,user-admin-001,moderator,active,2026-10-01T00:00:00Z
+cm-004,comm-women-004,Women in STEM & Engineering Guild,user-ananya-002,moderator,active,2026-10-10T00:00:00Z
+cm-005,comm-bio-005,Computational Biology & HealthTech Hub,user-david-003,moderator,active,2026-10-20T00:00:00Z
+cm-006,comm-research-006,Postgraduate & Faculty Research Council,user-faculty-001,moderator,active,2026-11-01T00:00:00Z
+cm-007,comm-ai-001,MSGI AI & Robotics Guild,user-student-001,member,active,2026-10-05T00:00:00Z
+cm-008,comm-cloud-002,Cloud Native & DevOps Practitioners,user-student-002,member,active,2026-10-12T00:00:00Z
+cm-009,comm-women-004,Women in STEM & Engineering Guild,user-student-002,member,active,2026-10-15T00:00:00Z
+cm-010,comm-bio-005,Computational Biology & HealthTech Hub,user-kenji-001,member,active,2026-10-22T00:00:00Z
+cm-011,comm-exec-003,Alumni Founders & Executive Circle,user-yuki-004,member,pending,2026-11-05T00:00:00Z
+cm-012,comm-research-006,Postgraduate & Faculty Research Council,user-student-001,member,pending,2026-11-10T00:00:00Z

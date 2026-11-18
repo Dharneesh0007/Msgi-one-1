@@ -1,0 +1,6 @@
+startup_id,name,founder_id,founder_name,industry,stage,tagline,website_url,seeking_mentors,seeking_talent,is_verified,created_at
+start-neural-001,NeuralFlow Dynamics,user-kenji-001,Kenji Sato,Artificial Intelligence,seed,Real-time robotics inference acceleration using customized compiler toolchains.,https://neuralflow.example.msgi.edu,true,true,true,2026-08-01T00:00:00Z
+start-agri-002,VerdantSense Systems,user-ananya-002,Ananya Sharma,CleanTech / AgTech,early,Precision satellite soil telemetry for regenerative farming collectives.,https://verdantsense.example.msgi.edu,true,false,true,2026-09-01T00:00:00Z
+start-robotics-003,BionicMotion Labs,user-david-003,David Chen,Robotics,seed,Low-cost compliant robotic actuators for prosthetic mobility assistance.,https://bionicmotion.example.msgi.edu,false,true,true,2026-09-20T00:00:00Z
+start-cloud-004,KubeSphere Cloud,user-yuki-004,Yuki Tanaka,DevOps & Infrastructure,growth,Automated multi-cloud failover orchestration for latency-critical workloads.,https://kubesphere.example.msgi.edu,false,true,true,2026-10-05T00:00:00Z
+start-bio-005,HelixGen Therapeutics,user-faculty-001,Dr. Arata Mori,BioTech,early,Targeted RNA therapeutics candidate discovery via structural deep learning.,https://helixgen.example.msgi.edu,true,true,true,2026-10-25T00:00:00Z
