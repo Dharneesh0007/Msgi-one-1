@@ -1,21 +1,12 @@
 /**
  * MSGI One — Shared API Contract & Data Types
+ * Aligns strictly with docs/API_CONTRACT.md and Phase 1 Backend/Mobile implementations.
  */
 
-export type UserRole = "student" | "alumni" | "faculty" | "recruiter" | "admin";
-
-export interface UserSummary {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  avatar_url?: string;
-  is_verified: boolean;
-  roles: UserRole[];
-}
+export type UserRole = 'student' | 'alumni' | 'faculty' | 'recruiter' | 'admin';
 
 export interface StandardApiResponse<T> {
-  status: "success" | "error";
+  status: 'success' | 'error';
   data: T | null;
   error: ApiError | null;
   meta: Record<string, unknown>;
@@ -25,12 +16,80 @@ export interface StandardApiResponse<T> {
 export interface ApiError {
   code: string;
   message: string;
-  details?: Array<{ field: string; issue: string }>;
+  details?: Record<string, unknown> | null;
+}
+
+export interface UserPreferences {
+  theme: 'system' | 'light' | 'dark';
+  push_notifications_enabled: boolean;
+  email_digests_enabled: boolean;
+}
+
+export interface StudentProfileSummary {
+  roll_number?: string;
+  department?: string;
+  enrollment_year?: number;
+  expected_graduation_year?: number;
+  degree_program?: string;
+  career_interests?: string[];
+}
+
+export interface AlumniProfileSummary {
+  graduation_year?: number;
+  degree?: string;
+  major?: string;
+  headline?: string;
+  current_company?: string;
+  current_title?: string;
+  industry?: string;
+}
+
+export interface UserProfileResponse {
+  id: string;
+  email: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  avatar_url?: string | null;
+  requested_role?: string;
+  is_verified: boolean;
+  is_active: boolean;
+  roles: UserRole[];
+  preferences: UserPreferences;
+  student_profile?: StudentProfileSummary | null;
+  alumni_profile?: AlumniProfileSummary | null;
+  is_profile_complete: boolean;
+}
+
+export interface UserUpdateRequest {
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  preferences?: Partial<UserPreferences>;
+}
+
+export interface UserOnboardingRequest {
+  first_name: string;
+  last_name: string;
+  department?: string;
+  requested_role?: string;
+}
+
+export interface PublicUserProfileResponse {
+  id: string;
+  full_name: string;
+  avatar_url?: string | null;
+  role: string;
+  is_verified: boolean;
+  headline?: string | null;
+  current_company?: string | null;
+  current_title?: string | null;
+  location?: string | null;
+  skills: string[];
 }
 
 export interface CareerRoadmapWorkflowOutput {
   workflow_id: string;
-  status: "in_progress" | "completed" | "awaiting_approval" | "failed";
+  status: 'in_progress' | 'completed' | 'awaiting_approval' | 'failed';
   summary: {
     target_role: string;
     target_country: string;

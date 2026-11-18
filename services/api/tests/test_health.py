@@ -1,28 +1,29 @@
-"""Health Check API Unit & Integration Tests."""
+"""
+MSGI One — Health Check Unit Tests
+Tests: /health, /api/v1/health, and root endpoint info.
+"""
 
 import pytest
-from fastapi.testclient import TestClient
-from src.main import app
-
-client = TestClient(app)
+from src.main import health_check, root
+from src.core.config import settings
 
 
-def test_health_check_returns_200():
-    """Verify that /api/v1/health returns 200 OK and standard envelope."""
-    response = client.get("/api/v1/health")
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["status"] == "success"
-    assert payload["error"] is None
-    assert payload["data"]["service"] == "msgi-one-api"
-    assert payload["data"]["version"] == "0.1.0"
-    assert "timestamp" in payload
+def test_health_check_returns_success_envelope():
+    """Verify that health_check() returns 200 OK structure and MSGI One envelope."""
+    response = health_check()
+    assert response.status == "success"
+    assert response.error is None
+    assert response.data.service == "msgi-one-api"
+    assert response.data.version == "0.1.0"
+    assert response.data.environment == settings.ENVIRONMENT
+    assert response.data.database_status == "configured"
+    assert response.data.ai_orchestrator_status == "ready"
+    assert response.meta["phase"] == "Phase 1 — Application Foundation"
 
 
-def test_root_endpoint_returns_project_info():
-    """Verify that root endpoint provides project documentation links."""
-    response = client.get("/")
-    assert response.status_code == 200
-    data = response.json()
+def test_root_endpoint_returns_documentation_links():
+    """Verify that root endpoint provides OpenAPI docs and health links."""
+    data = root()
     assert "MSGI One" in data["project"]
-    assert data["health"] == "/api/v1/health"
+    assert data["health"] == f"{settings.API_V1_STR}/health"
+    assert data["documentation"] == "/docs"

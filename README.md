@@ -78,18 +78,25 @@ npx expo start --android
 
 ### 3.5 Running Automated Tests
 ```bash
-# Backend Tests
+# Backend Unit Tests (Run offline without network overhead)
 cd services/api
-uv run pytest tests/ -v
+uv run --offline --no-sync pytest tests/ -v
 
-# Mobile Type Checking
-cd apps/mobile
-npx tsc --noEmit
+# Full Phase 1 Verification Suite
+python scripts/verify_phase_1.py
 ```
 
 ---
 
 ## 4. Documentation Index
+
+### Phase 1 Foundation Reports
+- [PHASE_0_CORRECTIONS.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_0_CORRECTIONS.md)
+- [PHASE_1_IMPLEMENTATION_REPORT.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_1_IMPLEMENTATION_REPORT.md)
+- [PHASE_1_TEST_RESULTS.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_1_TEST_RESULTS.md)
+- [PHASE_1_INTEGRATION_HANDOFF.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_1_INTEGRATION_HANDOFF.md)
+
+### Phase 0 Architecture Specifications
 
 - [PHASE_0_PROJECT_AUDIT.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/PHASE_0_PROJECT_AUDIT.md)
 - [TECHNOLOGY_STACK.md](file:///c:/Users/dharneesh/OneDrive/Documents/msgi-one/docs/TECHNOLOGY_STACK.md)
