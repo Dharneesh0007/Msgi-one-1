@@ -92,6 +92,8 @@ htmlcov/
 # ==========================================
 *.sqlite3
 *.sqlite
+*.sqlite-shm
+*.sqlite-wal
 *.db
 supabase/.branches/
 supabase/.temp/
