@@ -1,8 +1,10 @@
 # MSGI One — Staging Release Gate Decision & Sign-Off
 **Environment:** STAGING ONLY  
-**Release Candidate:** v0.1.0-staging (`deploy/staging-hosted`, Commit `f4b4575`)  
+**Release Candidate:** v0.1.0-staging (`deploy/staging-hosted`, Commit `6ff0a3e`)  
 **Staging Cluster:** Hosted Supabase PostgreSQL 17.12 (`jndvnbvpwxhfmqgmqxfm`)  
-**Evaluation Timestamp:** 2026-11-20T13:45:00+05:30  
+**API Gateway:** Hosted Render FastAPI (`https://msgi-one-jpkz.onrender.com`)  
+**Mobile Release Baseline:** Frozen Android APK (`a95a7169-d48b-4730-bcfd-921500e4b8fae`)  
+**Evaluation Timestamp:** 2026-11-20T18:50:00+05:30  
 **Compliance Standard:** Mandatory Engineering Laws (AGENTS.md Rules 10, 16, 20)  
 
 ---
