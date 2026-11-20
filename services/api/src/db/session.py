@@ -8,10 +8,19 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from src.core.config import settings
 
 # Engine configuration
+connect_args = {}
+if settings.DATABASE_URL.startswith("postgresql"):
+    import ssl
+    ssl_ctx = ssl.create_default_context()
+    ssl_ctx.check_hostname = False
+    ssl_ctx.verify_mode = ssl.CERT_NONE
+    connect_args = {"statement_cache_size": 0, "ssl": ssl_ctx}
+
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,
     future=True,
+    connect_args=connect_args,
 )
 
 AsyncSessionLocal = async_sessionmaker(

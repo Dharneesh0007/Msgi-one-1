@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "endpoint": "wss://jndvnbvpwxhfmqgmqxfm.supabase.co/realtime/v1/websocket",
+  "connect_latency_ms": 884,
+  "channel": "realtime:staging_room",
+  "join_reply_status": "ok",
+  "broadcast_event": "staging_ping",
+  "broadcast_ack_event": "phx_reply"
+}

@@ -72,7 +72,7 @@ export default function DashboardScreen() {
         api.listLearningResources(),
         api.getMyLearning(),
         api.listCommunities(),
-        api.getMyNotifications(),
+        api.getNotifications(),
         api.getUnreadNotificationCount(),
       ]);
 
@@ -83,11 +83,11 @@ export default function DashboardScreen() {
       if (myLearnRes.status === 'fulfilled') setUserEnrollments(myLearnRes.value || []);
       if (commRes.status === 'fulfilled') setCommunities(commRes.value || []);
       if (notifRes.status === 'fulfilled') setNotifications(notifRes.value || []);
-      if (unreadRes.status === 'fulfilled') setUnreadNotifCount(unreadRes.value || 0);
+      if (unreadRes.status === 'fulfilled') setUnreadNotifCount(unreadRes.value?.unread_count || 0);
 
-      if (primaryRole === 'admin' || user?.roles?.includes('admin') || user?.roles?.includes('institutional_admin')) {
+      if (primaryRole === 'admin' || user?.roles?.includes('admin')) {
         try {
-          const vReqs = await api.listPendingVerifications();
+          const vReqs = await api.getPendingVerifications();
           setPendingVerifications(vReqs || []);
         } catch {
           // ignore non-admin role errors
@@ -447,7 +447,7 @@ export default function DashboardScreen() {
             </Text>
           </TouchableOpacity>
 
-          {(primaryRole === 'admin' || user?.roles?.includes('admin') || user?.roles?.includes('institutional_admin')) && (
+          {(primaryRole === 'admin' || user?.roles?.includes('admin')) && (
             <TouchableOpacity
               style={[styles.hubTabButton, activeServicesTab === 'admin' && styles.hubTabButtonActive]}
               onPress={() => setActiveServicesTab('admin')}

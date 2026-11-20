@@ -193,7 +193,9 @@ def get_default_checkpointer() -> BaseCheckpointSaver:
                 return saver
             except Exception:
                 pass
-    elif mode == "sqlite":
+    
+    # Durable SQLite checkpointer (persists across API process restarts)
+    if mode in ("postgres", "sqlite"):
         try:
             db_path = Path(__file__).resolve().parent.parent.parent / "checkpoints.sqlite"
             conn = sqlite3.connect(str(db_path), check_same_thread=False)

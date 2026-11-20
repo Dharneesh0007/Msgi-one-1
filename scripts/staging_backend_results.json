@@ -1,0 +1,85 @@
+{
+  "state": "PASS",
+  "endpoints": [
+    {
+      "name": "System Health Check",
+      "url": "/health",
+      "method": "GET",
+      "status": "PASS",
+      "http_status": 200,
+      "latency_ms": 22
+    },
+    {
+      "name": "Versioned Health Check",
+      "url": "/api/v1/health",
+      "method": "GET",
+      "status": "PASS",
+      "http_status": 200,
+      "latency_ms": 6
+    },
+    {
+      "name": "Current Profile (/users/me)",
+      "url": "/api/v1/users/me",
+      "method": "GET",
+      "status": "PASS",
+      "http_status": 200,
+      "latency_ms": 94
+    },
+    {
+      "name": "Alumni Directory",
+      "url": "/api/v1/alumni",
+      "method": "GET",
+      "status": "PASS",
+      "http_status": 200,
+      "latency_ms": 11
+    },
+    {
+      "name": "CareerBridge Job Listings",
+      "url": "/api/v1/jobs",
+      "method": "GET",
+      "status": "PASS",
+      "http_status": 200,
+      "latency_ms": 11
+    },
+    {
+      "name": "MentorMatch Roster",
+      "url": "/api/v1/mentors",
+      "method": "GET",
+      "status": "PASS",
+      "http_status": 200,
+      "latency_ms": 9
+    },
+    {
+      "name": "Events & Reunions",
+      "url": "/api/v1/events",
+      "method": "GET",
+      "status": "PASS",
+      "http_status": 200,
+      "latency_ms": 9
+    },
+    {
+      "name": "Communities & Interest Groups",
+      "url": "/api/v1/communities",
+      "method": "GET",
+      "status": "PASS",
+      "http_status": 200,
+      "latency_ms": 17
+    },
+    {
+      "name": "Realtime Notifications Roster",
+      "url": "/api/v1/notifications",
+      "method": "GET",
+      "status": "PASS",
+      "http_status": 200,
+      "latency_ms": 12
+    },
+    {
+      "name": "AI Command Centre Chat",
+      "url": "/api/v1/ai/chat",
+      "method": "POST",
+      "status": "PASS",
+      "http_status": 200,
+      "latency_ms": 25
+    }
+  ]
+}

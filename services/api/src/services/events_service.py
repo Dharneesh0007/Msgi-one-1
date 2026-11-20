@@ -99,7 +99,7 @@ def search_events(
     Phase 3 Tool Contract & Core Domain Service.
     Retrieves published events with accurate capacity metrics and registration status.
     """
-    event_type = filters.get("event_type", "").strip().lower()
+    event_type = (filters.get("event_type") or "").strip().lower()
     is_virtual = filters.get("is_virtual")
 
     results: List[EventResponse] = []

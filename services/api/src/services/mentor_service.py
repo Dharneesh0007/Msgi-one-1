@@ -106,8 +106,8 @@ def search_mentors(
     Phase 3 Tool Contract & Core Domain Service.
     Retrieves verified alumni who have opted in to mentoring and have open capacity.
     """
-    topic = filters.get("topic", "").strip().lower()
-    country = filters.get("country", "").strip().lower()
+    topic = (filters.get("topic") or "").strip().lower()
+    country = (filters.get("country") or "").strip().lower()
     student_goal = filters.get("student_goal", "AI Engineer")
 
     # Only include mentors accepting requests with open slots

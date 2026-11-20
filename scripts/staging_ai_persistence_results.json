@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "thread_id": "sess-durable-371e832f",
+  "checkpointer_type": "SqliteSaver",
+  "restored_session_id": "sess-durable-371e832f",
+  "restored_actions_count": 0,
+  "final_summary": "Recommended Mentor(s): Kenji Sato."
+}

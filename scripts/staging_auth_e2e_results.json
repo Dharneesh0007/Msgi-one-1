@@ -1,0 +1,56 @@
+{
+  "state": "PASS",
+  "tests": [
+    {
+      "test": "Auth Sign-In (student)",
+      "email": "alex.rivera@example.msgi.edu",
+      "status": "PASS",
+      "user_id": "79afaac0-5ed8-4eae-8c59-443d2cd56ba1",
+      "latency_ms": 661
+    },
+    {
+      "test": "Auth Sign-In (alumni)",
+      "email": "kenji.sato@example.msgi.edu",
+      "status": "PASS",
+      "user_id": "53e6a936-b9a4-431e-aedc-3bf90dc63c3c",
+      "latency_ms": 193
+    },
+    {
+      "test": "Auth Sign-In (admin)",
+      "email": "sarah.jenkins@example.msgi.edu",
+      "status": "PASS",
+      "user_id": "858f0d73-079a-4127-8a8c-08bf36591438",
+      "latency_ms": 218
+    },
+    {
+      "test": "RLS Read Own Profile",
+      "status": "PASS",
+      "details": "Profile 79afaac0-5ed8-4eae-8c59-443d2cd56ba1 resolved correctly."
+    },
+    {
+      "test": "RLS View Mentor Directory",
+      "status": "PASS",
+      "count": 3
+    },
+    {
+      "test": "RLS View Jobs",
+      "status": "PASS",
+      "count": 2
+    },
+    {
+      "test": "RLS View Events",
+      "status": "PASS",
+      "count": 1
+    },
+    {
+      "test": "RLS Read Own Notifications",
+      "status": "PASS",
+      "count": 1
+    },
+    {
+      "test": "RLS Notification Tenant Isolation",
+      "status": "PASS",
+      "details": "Attempt to read other user's notifications returned 0 rows (strictly isolated)."
+    }
+  ]
+}

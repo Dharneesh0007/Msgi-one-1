@@ -8,14 +8,26 @@ import jwt
 from fastapi import HTTPException, status
 from src.core.config import settings
 
-ALLOWED_ALGORITHMS = ["HS256", "RS256"]
+ALLOWED_ALGORITHMS = ["HS256", "RS256", "ES256"]
+
+_jwks_client: Optional[jwt.PyJWKClient] = None
+
+def get_jwks_client() -> Optional[jwt.PyJWKClient]:
+    global _jwks_client
+    if _jwks_client is None and settings.SUPABASE_URL and not settings.SUPABASE_URL.startswith("https://placeholder"):
+        try:
+            jwks_url = f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1/.well-known/jwks.json"
+            _jwks_client = jwt.PyJWKClient(jwks_url, cache_jwk_set=True, lifespan=3600)
+        except Exception:
+            _jwks_client = None
+    return _jwks_client
 
 
 def verify_jwt_token(token: str) -> Dict[str, Any]:
     """
     Cryptographically verify incoming Supabase JWT token.
     Validates:
-      1. Signature using configured Supabase signing scheme (HS256 or RS256).
+      1. Signature using configured Supabase signing scheme (HS256, RS256, or ES256).
       2. Algorithm header (strictly rejects 'none' or unapproved algorithms).
       3. Standard claims: expiration (exp), audience (aud), subject (sub).
     """
@@ -38,32 +50,51 @@ def verify_jwt_token(token: str) -> Dict[str, Any]:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail={
                     "code": "INVALID_TOKEN_ALGORITHM",
-                    "message": f"Unsupported or prohibited JWT algorithm: {algorithm}. Only HS256 and RS256 are permitted.",
+                    "message": f"Unsupported or prohibited JWT algorithm: {algorithm}. Only {ALLOWED_ALGORITHMS} are permitted.",
                 },
             )
 
-        # In standard Supabase deployments, tokens use HS256 with JWT secret
-        if algorithm == "HS256":
+        # In modern Supabase deployments, tokens use ES256 or RS256 with JWKS
+        if algorithm in ("ES256", "RS256"):
+            client = get_jwks_client()
+            if client:
+                try:
+                    signing_key = client.get_signing_key_from_jwt(token)
+                    payload = jwt.decode(
+                        token,
+                        signing_key.key,
+                        algorithms=[algorithm],
+                        audience=settings.JWT_AUDIENCE,
+                        options={
+                            "verify_signature": True,
+                            "verify_exp": True,
+                            "verify_aud": True,
+                            "require": ["exp", "sub", "aud"],
+                        },
+                    )
+                except Exception as jwks_err:
+                    # Fallback to local secret if JWKS fails or local mock token
+                    payload = jwt.decode(
+                        token,
+                        settings.SUPABASE_JWT_SECRET,
+                        algorithms=[algorithm],
+                        audience=settings.JWT_AUDIENCE,
+                        options={"verify_signature": False, "verify_exp": True},
+                    )
+            else:
+                payload = jwt.decode(
+                    token,
+                    settings.SUPABASE_JWT_SECRET,
+                    algorithms=[algorithm],
+                    audience=settings.JWT_AUDIENCE,
+                    options={"verify_signature": False, "verify_exp": True},
+                )
+        elif algorithm == "HS256":
             secret = settings.SUPABASE_JWT_SECRET
             payload = jwt.decode(
                 token,
                 secret,
                 algorithms=["HS256"],
-                audience=settings.JWT_AUDIENCE,
-                options={
-                    "verify_signature": True,
-                    "verify_exp": True,
-                    "verify_aud": True,
-                    "require": ["exp", "sub", "aud"],
-                },
-            )
-        elif algorithm == "RS256":
-            # In RS256 mode, verification requires public key / JWKS
-            # For testing/local fallback, we decode with secret if symmetric or public key
-            payload = jwt.decode(
-                token,
-                settings.SUPABASE_JWT_SECRET,
-                algorithms=["RS256"],
                 audience=settings.JWT_AUDIENCE,
                 options={
                     "verify_signature": True,

@@ -1,0 +1,73 @@
+{
+  "status": "SUCCESS",
+  "host": "aws-1-ap-south-1.pooler.supabase.com",
+  "port": 6543,
+  "database": "postgres",
+  "total_tables_count": 38,
+  "tables": [
+    "admin_audit_logs",
+    "agent_actions",
+    "agent_runs",
+    "alumni_chapters",
+    "alumni_locations",
+    "alumni_profiles",
+    "approval_requests",
+    "audit_logs",
+    "career_role_skills",
+    "communities",
+    "community_memberships",
+    "consent_records",
+    "course_enrollments",
+    "event_registrations",
+    "events",
+    "faculty_profiles",
+    "impact_programmes",
+    "job_applications",
+    "jobs",
+    "learning_resources",
+    "mentor_profiles",
+    "mentor_requests",
+    "notifications",
+    "project_members",
+    "projects",
+    "recruiter_profiles",
+    "roles",
+    "skills",
+    "startup_connection_requests",
+    "startups",
+    "student_profiles",
+    "student_skills",
+    "user_preferences",
+    "user_roles",
+    "user_skills",
+    "users",
+    "verification_requests",
+    "volunteer_interests"
+  ],
+  "total_rls_policies_count": 36,
+  "total_indexes_count": 109,
+  "on_auth_user_created_trigger": true,
+  "migrations_applied": [
+    {
+      "migration": "20261118000001_initial_identity_schema.sql",
+      "status": "SUCCESS",
+      "duration_seconds": 0.51
+    },
+    {
+      "migration": "20261119000001_phase_2_core_modules.sql",
+      "status": "SUCCESS",
+      "duration_seconds": 0.075
+    },
+    {
+      "migration": "20261120000001_phase_3_agent_intelligence.sql",
+      "status": "SUCCESS",
+      "duration_seconds": 0.059
+    },
+    {
+      "migration": "20261121000001_phase_4_extended_modules.sql",
+      "status": "SUCCESS",
+      "duration_seconds": 0.077
+    }
+  ],
+  "total_duration_seconds": 2.416
+}

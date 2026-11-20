@@ -145,11 +145,11 @@ def search_alumni(
     Searches alumni directory using deterministic multi-parameter filtering,
     privacy enforcement, and pagination.
     """
-    query = filters.get("query", "").strip().lower()
-    department = filters.get("department", "").strip().lower()
-    industry = filters.get("industry", "").strip().lower()
-    country = filters.get("country", "").strip().lower()
-    skill = filters.get("skill", "").strip().lower()
+    query = (filters.get("query") or "").strip().lower()
+    department = (filters.get("department") or "").strip().lower()
+    industry = (filters.get("industry") or "").strip().lower()
+    country = (filters.get("country") or "").strip().lower()
+    skill = (filters.get("skill") or "").strip().lower()
     graduation_year = filters.get("graduation_year")
     verified_only = filters.get("verified_only", True)
     page = max(1, int(filters.get("page", 1)))

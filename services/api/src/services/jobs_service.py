@@ -136,10 +136,10 @@ def search_jobs(
     Phase 3 Tool Contract & Core Domain Service.
     Retrieves active, non-expired career opportunities with skill match analysis.
     """
-    opportunity_type = filters.get("opportunity_type", "").strip().lower()
-    country = filters.get("country", "").strip().lower()
-    workplace_type = filters.get("workplace_type", "").strip().lower()
-    skill = filters.get("skill", "").strip().lower()
+    opportunity_type = (filters.get("opportunity_type") or "").strip().lower()
+    country = (filters.get("country") or "").strip().lower()
+    workplace_type = (filters.get("workplace_type") or "").strip().lower()
+    skill = (filters.get("skill") or "").strip().lower()
     student_skills = filters.get("student_skills", ["Python", "Machine Learning"])
 
     now = datetime.now(timezone.utc)

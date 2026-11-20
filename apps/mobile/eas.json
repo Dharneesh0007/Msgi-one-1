@@ -29,6 +29,17 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.msgi.edu"
       }
+    },
+    "staging": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api-staging.msgi.edu/api/v1",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://jndvnbvpwxhfmqgmqxfm.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_VKlYXils1BGRr5znv9SZJg_C8cZtWUr"
+      }
     }
   },
   "submit": {
