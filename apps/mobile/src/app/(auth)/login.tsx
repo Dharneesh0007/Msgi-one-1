@@ -48,7 +48,8 @@ export default function LoginScreen() {
 
   const handleQuickDemo = (roleEmail: string) => {
     setEmail(roleEmail);
-    setPassword('DemoPassword2026!');
+    setPassword('');
+    setLocalError(null);
   };
 
   return (
@@ -135,21 +136,21 @@ export default function LoginScreen() {
           <View style={styles.demoButtonRow}>
             <TouchableOpacity
               style={styles.demoButton}
-              onPress={() => handleQuickDemo('student@example.msgi.edu')}
+              onPress={() => handleQuickDemo('alex.rivera@example.msgi.edu')}
             >
-              <Text style={styles.demoButtonText}>Student</Text>
+              <Text style={styles.demoButtonText}>Student (Alex)</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.demoButton}
-              onPress={() => handleQuickDemo('alumni@example.msgi.edu')}
+              onPress={() => handleQuickDemo('kenji.sato@example.msgi.edu')}
             >
-              <Text style={styles.demoButtonText}>Alumni</Text>
+              <Text style={styles.demoButtonText}>Alumni (Kenji)</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.demoButton}
-              onPress={() => handleQuickDemo('admin@example.msgi.edu')}
+              onPress={() => handleQuickDemo('sarah.jenkins@example.msgi.edu')}
             >
-              <Text style={styles.demoButtonText}>Admin</Text>
+              <Text style={styles.demoButtonText}>Admin (Sarah)</Text>
             </TouchableOpacity>
           </View>
         </View>
