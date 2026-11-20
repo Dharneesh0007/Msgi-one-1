@@ -13,7 +13,11 @@ from typing import Dict, Any, List, Optional
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.checkpoint.sqlite import SqliteSaver
+
+try:
+    from langgraph.checkpoint.sqlite import SqliteSaver
+except ImportError:
+    SqliteSaver = None
 
 from src.ai.state import CommandCentreState
 from src.ai.agents.supervisor import supervisor_node
@@ -195,7 +199,7 @@ def get_default_checkpointer() -> BaseCheckpointSaver:
                 pass
     
     # Durable SQLite checkpointer (persists across API process restarts)
-    if mode in ("postgres", "sqlite"):
+    if mode in ("postgres", "sqlite") and SqliteSaver is not None:
         try:
             db_path = Path(__file__).resolve().parent.parent.parent / "checkpoints.sqlite"
             conn = sqlite3.connect(str(db_path), check_same_thread=False)
