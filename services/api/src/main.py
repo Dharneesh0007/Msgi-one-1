@@ -48,6 +48,26 @@ app.add_middleware(
 )
 
 
+# Normalization Middleware for Client Build Compatibility
+@app.middleware("http")
+async def normalize_api_v1_prefix_middleware(request: Request, call_next):
+    """
+    Seamlessly normalizes double-prefixed paths (e.g. /api/v1/api/v1/alumni -> /api/v1/alumni)
+    arising when clients configured with base URL 'https://host/api/v1' invoke '/api/v1/...'.
+    Ensures zero disruption to frozen Android baseline builds.
+    """
+    path = request.scope.get("path", "")
+    if path.startswith("/api/v1/api/v1/"):
+        request.scope["path"] = path[7:]  # strips '/api/v1' leaving '/api/v1/...'
+        if "raw_path" in request.scope:
+            request.scope["raw_path"] = request.scope["path"].encode("ascii")
+    elif path == "/api/v1/api/v1":
+        request.scope["path"] = "/api/v1"
+        if "raw_path" in request.scope:
+            request.scope["raw_path"] = request.scope["path"].encode("ascii")
+    return await call_next(request)
+
+
 # Global Exception Handlers ensuring MSGI One Standard Envelope
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -153,69 +173,51 @@ def health_check() -> HealthResponseEnvelope:
     )
 
 
-# Mount Versioned API Routers
-app.include_router(users_router, prefix=settings.API_V1_STR)
-app.include_router(auth_router, prefix=settings.API_V1_STR)
-app.include_router(alumni_router, prefix=settings.API_V1_STR)
-app.include_router(jobs_router, prefix=settings.API_V1_STR)
-app.include_router(mentors_router, prefix=settings.API_V1_STR)
-app.include_router(events_router, prefix=settings.API_V1_STR)
-app.include_router(global_router, prefix=settings.API_V1_STR)
-app.include_router(ai_router, prefix=settings.API_V1_STR)
-app.include_router(learning_router, prefix=settings.API_V1_STR)
-app.include_router(communities_router, prefix=settings.API_V1_STR)
-app.include_router(admin_router, prefix=settings.API_V1_STR)
-app.include_router(notifications_router, prefix=settings.API_V1_STR)
-app.include_router(extended_router, prefix=settings.API_V1_STR)
+# Mount Versioned API Routers across both /api/v1 and /api/v1/api/v1 prefixes
+# to ensure zero disruption for frozen client builds.
+API_PREFIXES = [settings.API_V1_STR, f"{settings.API_V1_STR}{settings.API_V1_STR}"]
+
+for pfx in API_PREFIXES:
+    is_primary = (pfx == settings.API_V1_STR)
+    app.include_router(users_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(auth_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(alumni_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(jobs_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(mentors_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(events_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(global_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(ai_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(learning_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(communities_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(admin_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(notifications_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(extended_router, prefix=pfx, include_in_schema=is_primary)
 
 
-# Direct /api/v1/me and /api/v1/me/onboard aliases for client convenience and backward compatibility
-@app.get(
-    f"{settings.API_V1_STR}/me",
-    tags=["Users & Profiles"],
-    summary="Get Current User Profile (Direct Alias)",
-    include_in_schema=True,
-)
-def direct_get_me(
-    current_user=Depends(get_current_user),
-):
+# Direct /me and convenience aliases for primary prefix (/api/v1) and double prefix (/api/v1/api/v1)
+@app.get(f"{settings.API_V1_STR}/me", tags=["Users & Profiles"], summary="Get Current User Profile (Direct Alias)")
+@app.get(f"{settings.API_V1_STR}{settings.API_V1_STR}/me", tags=["Users & Profiles"], include_in_schema=False)
+def direct_get_me(current_user=Depends(get_current_user)):
     from src.routers.users import get_my_profile
     return get_my_profile(current_user=current_user)
 
 
-@app.patch(
-    f"{settings.API_V1_STR}/me",
-    tags=["Users & Profiles"],
-    summary="Update Current User Profile (Direct Alias)",
-    include_in_schema=True,
-)
-def direct_patch_me(
-    update_data: UserUpdateRequest,
-    current_user=Depends(get_current_user),
-):
+@app.patch(f"{settings.API_V1_STR}/me", tags=["Users & Profiles"], summary="Update Current User Profile (Direct Alias)")
+@app.patch(f"{settings.API_V1_STR}{settings.API_V1_STR}/me", tags=["Users & Profiles"], include_in_schema=False)
+def direct_patch_me(update_data: UserUpdateRequest, current_user=Depends(get_current_user)):
     from src.routers.users import update_my_profile
     return update_my_profile(update_data=update_data, current_user=current_user)
 
 
-@app.post(
-    f"{settings.API_V1_STR}/me/onboard",
-    tags=["Users & Profiles"],
-    summary="Complete Profile Onboarding (Direct Alias)",
-    include_in_schema=True,
-)
-def direct_onboard_me(
-    onboarding_data: UserOnboardingRequest,
-    current_user=Depends(get_current_user),
-):
+@app.post(f"{settings.API_V1_STR}/me/onboard", tags=["Users & Profiles"], summary="Complete Profile Onboarding (Direct Alias)")
+@app.post(f"{settings.API_V1_STR}{settings.API_V1_STR}/me/onboard", tags=["Users & Profiles"], include_in_schema=False)
+def direct_onboard_me(onboarding_data: UserOnboardingRequest, current_user=Depends(get_current_user)):
     from src.routers.users import complete_onboarding
     return complete_onboarding(onboarding_data=onboarding_data, current_user=current_user)
 
 
-@app.get(
-    f"{settings.API_V1_STR}/me/learning",
-    tags=["Learning Academy"],
-    summary="Get My Enrolled Courses (Direct Alias)",
-)
+@app.get(f"{settings.API_V1_STR}/me/learning", tags=["Learning Academy"], summary="Get My Learning Registrations (Direct Alias)")
+@app.get(f"{settings.API_V1_STR}{settings.API_V1_STR}/me/learning", tags=["Learning Academy"], include_in_schema=False)
 def direct_get_my_learning(current_user=Depends(get_current_user)):
     from src.services.learning_service import get_my_learning
     from src.schemas.user import StandardEnvelope
@@ -223,11 +225,8 @@ def direct_get_my_learning(current_user=Depends(get_current_user)):
     return StandardEnvelope(status="success", data=items, timestamp=datetime.now(timezone.utc))
 
 
-@app.get(
-    f"{settings.API_V1_STR}/me/communities",
-    tags=["Communities & Groups"],
-    summary="Get My Community Memberships (Direct Alias)",
-)
+@app.get(f"{settings.API_V1_STR}/me/communities", tags=["Communities & Groups"], summary="Get My Community Memberships (Direct Alias)")
+@app.get(f"{settings.API_V1_STR}{settings.API_V1_STR}/me/communities", tags=["Communities & Groups"], include_in_schema=False)
 def direct_get_my_communities(current_user=Depends(get_current_user)):
     from src.services.community_service import get_my_communities
     from src.schemas.user import StandardEnvelope
@@ -235,11 +234,8 @@ def direct_get_my_communities(current_user=Depends(get_current_user)):
     return StandardEnvelope(status="success", data=items, timestamp=datetime.now(timezone.utc))
 
 
-@app.get(
-    f"{settings.API_V1_STR}/me/notifications",
-    tags=["Notifications"],
-    summary="Get My Notifications (Direct Alias)",
-)
+@app.get(f"{settings.API_V1_STR}/me/notifications", tags=["Notifications"], summary="Get My Notifications (Direct Alias)")
+@app.get(f"{settings.API_V1_STR}{settings.API_V1_STR}/me/notifications", tags=["Notifications"], include_in_schema=False)
 def direct_get_my_notifications(current_user=Depends(get_current_user)):
     from src.services.notifications_service import get_my_notifications
     from src.schemas.user import StandardEnvelope

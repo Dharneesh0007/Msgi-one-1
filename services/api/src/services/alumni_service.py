@@ -14,6 +14,8 @@ _SYNTHETIC_ALUMNI_STORE: List[Dict[str, Any]] = [
     {
         "id": "alumni-kenji-sato",
         "user_id": "user-kenji-001",
+        "db_id": "8df49472-e52b-4ae2-8edd-6e61a32b3f05",
+        "db_user_id": "53e6a936-b9a4-431e-aedc-3bf90dc63c3c",
         "full_name": "Kenji Sato",
         "avatar_url": None,
         "graduation_year": 2021,
@@ -35,6 +37,8 @@ _SYNTHETIC_ALUMNI_STORE: List[Dict[str, Any]] = [
     {
         "id": "alumni-ananya-sharma",
         "user_id": "user-ananya-002",
+        "db_id": "f5e5d95b-9bdb-4ce7-8045-2640dcaa714b",
+        "db_user_id": "2003cfcc-0883-4b9b-99f3-21d35769ac78",
         "full_name": "Ananya Sharma",
         "avatar_url": None,
         "graduation_year": 2019,
@@ -56,6 +60,8 @@ _SYNTHETIC_ALUMNI_STORE: List[Dict[str, Any]] = [
     {
         "id": "alumni-david-chen",
         "user_id": "user-david-003",
+        "db_id": "ae0952b1-7398-4c53-a12a-e03d78c5c99b",
+        "db_user_id": "40ad6af6-4833-4646-a60d-c98d5b8d8d9a",
         "full_name": "David Chen",
         "avatar_url": None,
         "graduation_year": 2022,
@@ -77,6 +83,8 @@ _SYNTHETIC_ALUMNI_STORE: List[Dict[str, Any]] = [
     {
         "id": "alumni-yuki-tanaka",
         "user_id": "user-yuki-004",
+        "db_id": "f657068c-55b6-473f-abf4-37a04f61746a",
+        "db_user_id": "3354cd49-3a64-459d-9d42-4e02af6528ad",
         "full_name": "Yuki Tanaka",
         "avatar_url": None,
         "graduation_year": 2020,
@@ -231,7 +239,17 @@ def get_alumni_by_id(
     authenticated_user: AuthenticatedUser,
 ) -> AlumniDetailResponse:
     """Retrieve individual alumni profile with public details."""
-    match = next((item for item in _SYNTHETIC_ALUMNI_STORE if item["id"] == alumni_id), None)
+    match = next(
+        (
+            item for item in _SYNTHETIC_ALUMNI_STORE
+            if item["id"] == alumni_id
+            or item.get("alias_id") == alumni_id
+            or item.get("user_id") == alumni_id
+            or item.get("db_id") == alumni_id
+            or item.get("db_user_id") == alumni_id
+        ),
+        None,
+    )
     if not match:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

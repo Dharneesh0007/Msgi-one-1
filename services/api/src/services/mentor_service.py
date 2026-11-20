@@ -21,6 +21,8 @@ _MENTORS_STORE: List[Dict[str, Any]] = [
     {
         "id": "mentor-kenji-001",
         "user_id": "user-kenji-001",
+        "db_id": "8df49472-e52b-4ae2-8edd-6e61a32b3f05",
+        "db_user_id": "53e6a936-b9a4-431e-aedc-3bf90dc63c3c",
         "full_name": "Kenji Sato",
         "headline": "Staff AI Engineer at Rakuten Symphony",
         "current_company": "Rakuten Symphony",
@@ -34,6 +36,8 @@ _MENTORS_STORE: List[Dict[str, Any]] = [
     {
         "id": "mentor-ananya-002",
         "user_id": "user-ananya-002",
+        "db_id": "f5e5d95b-9bdb-4ce7-8045-2640dcaa714b",
+        "db_user_id": "2003cfcc-0883-4b9b-99f3-21d35769ac78",
         "full_name": "Ananya Sharma",
         "headline": "Senior Product Manager at Microsoft",
         "current_company": "Microsoft",
@@ -156,7 +160,16 @@ def search_mentors(
 
 def get_mentor_by_id(mentor_id: str, authenticated_user: AuthenticatedUser) -> MentorProfileResponse:
     """Retrieve individual mentor profile."""
-    m = next((mentor for mentor in _MENTORS_STORE if mentor["id"] == mentor_id), None)
+    m = next(
+        (
+            mentor for mentor in _MENTORS_STORE
+            if mentor["id"] == mentor_id
+            or mentor.get("db_id") == mentor_id
+            or mentor.get("user_id") == mentor_id
+            or mentor.get("db_user_id") == mentor_id
+        ),
+        None,
+    )
     if not m:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -209,7 +222,16 @@ def create_mentor_request(
     Submits a mentorship request after user confirmation.
     Enforces mentor capacity and prevents duplicate pending requests.
     """
-    mentor = next((m for m in _MENTORS_STORE if m["id"] == request_data.mentor_id), None)
+    mentor = next(
+        (
+            m for m in _MENTORS_STORE
+            if m["id"] == request_data.mentor_id
+            or m.get("db_id") == request_data.mentor_id
+            or m.get("user_id") == request_data.mentor_id
+            or m.get("db_user_id") == request_data.mentor_id
+        ),
+        None,
+    )
     if not mentor:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
