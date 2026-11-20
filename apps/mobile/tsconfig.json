@@ -3,7 +3,9 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@msgi-one/contracts": ["../../packages/contracts"],
+      "@msgi/contracts": ["../../packages/contracts"]
     }
   },
   "include": [
