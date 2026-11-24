@@ -606,7 +606,14 @@ async def execute_with_failover(
     Executes LLM completion across admin-configured providers in priority order
     with RPM limiting, budget checks, circuit breaking, bounded backoff, and ledger recording.
     """
+    # Prioritize live vault providers over deterministic fallback regardless of AI_PROVIDER env.
     configs = list_provider_configs(include_disabled=False)
+    deterministic_configs = [c for c in configs if c.provider == "deterministic"]
+    non_deterministic = [c for c in configs if c.provider != "deterministic"]
+    if non_deterministic:
+        configs = non_deterministic + deterministic_configs
+    else:
+        configs = deterministic_configs
     if preferred_config_id:
         configs.sort(key=lambda c: (0 if c.id == preferred_config_id else 1, 0 if c.is_primary else 1, c.fallback_priority))
 
