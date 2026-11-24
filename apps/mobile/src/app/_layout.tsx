@@ -3,17 +3,51 @@
  * Enforces authentication state machine and redirects according to role & onboarding status.
  */
 
-import React, { useEffect } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Stack, useRouter, useSegments, Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { QueryClientProvider } from '@tanstack/react-query';
+import * as Notifications from 'expo-notifications';
 import { AuthProvider, useAuth } from '../context/AuthContext';
+import { queryClient } from '../lib/queryClient';
+import { isBiometricLockEnabled, promptBiometricUnlock } from '../lib/biometrics';
+import { registerDeviceForPushNotifications, resolveNotificationTargetRoute } from '../lib/notifications';
 import { Colors, Typography, Spacing } from '../constants/theme';
 
 function RootNavigationLayout() {
   const { session, user, isLoading, isProfileComplete } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const [biometricLocked, setBiometricLocked] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    if (!session) {
+      setBiometricLocked(false);
+      return;
+    }
+    isBiometricLockEnabled().then(async (enabled) => {
+      if (!active || !enabled) return;
+      setBiometricLocked(true);
+      const ok = await promptBiometricUnlock('Unlock MSGI One');
+      if (active && ok) setBiometricLocked(false);
+    });
+    registerDeviceForPushNotifications().catch(() => null);
+    return () => {
+      active = false;
+    };
+  }, [session?.access_token]);
+
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const target = resolveNotificationTargetRoute(response.notification.request.content.data as Record<string, any>);
+      if (target) {
+        router.push(target as Href);
+      }
+    });
+    return () => sub.remove();
+  }, [router]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -53,6 +87,26 @@ function RootNavigationLayout() {
     );
   }
 
+  if (biometricLocked && session) {
+    return (
+      <View style={styles.loadingContainer}>
+        <View style={styles.brandBadge}>
+          <Text style={styles.brandTitle}>MSGI ONE LOCKED</Text>
+          <Text style={styles.brandSubtitle}>Biometric Verification Required</Text>
+        </View>
+        <TouchableOpacity
+          style={{ backgroundColor: Colors.accent, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10 }}
+          onPress={async () => {
+            const ok = await promptBiometricUnlock('Unlock MSGI One');
+            if (ok) setBiometricLocked(false);
+          }}
+        >
+          <Text style={{ color: Colors.primaryDark, fontWeight: '700' }}>Unlock with Biometrics</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <>
       <StatusBar style="auto" />
@@ -61,6 +115,7 @@ function RootNavigationLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="meetings" options={{ headerShown: false }} />
         <Stack.Screen name="messages" options={{ headerShown: false }} />
+        <Stack.Screen name="admin-ai" options={{ headerShown: false }} />
         <Stack.Screen name="room/[meetingId]" options={{ headerShown: false }} />
       </Stack>
     </>
@@ -69,9 +124,11 @@ function RootNavigationLayout() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootNavigationLayout />
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RootNavigationLayout />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

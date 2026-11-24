@@ -1,53 +1,53 @@
-name: MSGI One CI Pipeline
+name: MSGI One CI Verification Gate
 
 on:
   push:
-    branches: [main, develop]
+    branches: ["main", "feat/*"]
   pull_request:
-    branches: [main, develop]
+    branches: ["main"]
 
 jobs:
-  backend-verification:
+  backend-tests:
+    name: FastAPI Backend & AI Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.12"
+          enable-cache: true
+      - name: Install Python 3.12 & Dependencies
+        run: |
+          uv python install 3.12
+          uv sync --frozen --dev
+      - name: Run Complete Backend Test Suite
+        env:
+          AI_PROVIDER: deterministic
+          ENVIRONMENT: test
+        run: uv run pytest tests -q
 
-      - name: Install uv package manager
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
-
-      - name: Install dependencies
-        working-directory: services/api
-        run: uv pip install --system -r requirements.txt
-
-      - name: Run Ruff Linting
-        working-directory: services/api
-        run: ruff check src/
-
-      - name: Run Pytest Test Suite
-        working-directory: services/api
-        run: pytest tests/ -v
-
-  mobile-verification:
+  mobile-checks:
+    name: Expo Mobile Typecheck & Export Check
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Install dependencies
-        working-directory: apps/mobile
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - name: Install Dependencies
         run: npm ci
-
-      - name: TypeScript type checking
-        working-directory: apps/mobile
-        run: npx tsc --noEmit
+      - name: TypeScript Strict Check
+        run: npm run typecheck
+      - name: Expo Pre-EAS Bundle Export Verification
+        env:
+          EXPO_NO_TELEMETRY: "1"
+        run: |
+          npx expo export --platform android --output-dir .expo-export-check
+          rm -rf .expo-export-check

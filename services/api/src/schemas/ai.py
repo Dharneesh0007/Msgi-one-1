@@ -1,6 +1,7 @@
 """
 MSGI One — AI Command Centre Request & Response Schemas
 Principles: Typed Contracts (Pydantic v2) matching packages/contracts/types.ts.
+Preserves frozen Android APK contract compatibility (all new fields optional).
 """
 
 from typing import Dict, Any, List, Optional
@@ -20,6 +21,8 @@ class ApprovalItem(BaseModel):
     target_entity_id: str
     target_entity_name: str
     status: str
+    args_hash: Optional[str] = None
+    expires_at: Optional[str] = None
     decision_note: Optional[str] = None
     decided_at: Optional[str] = None
     created_at: str
@@ -37,6 +40,9 @@ class AIChatResponse(BaseModel):
     recommended_jobs: Optional[List[Dict[str, Any]]] = None
     recommended_events: Optional[List[Dict[str, Any]]] = None
     alumni_matches: Optional[List[Dict[str, Any]]] = None
+    recommended_slots: Optional[List[Dict[str, Any]]] = None
+    drafted_message: Optional[Dict[str, Any]] = None
+    admin_summary: Optional[Dict[str, Any]] = None
     pending_approval: Optional[ApprovalItem] = None
     final_summary: str
     evidence: List[Dict[str, Any]] = Field(default_factory=list)

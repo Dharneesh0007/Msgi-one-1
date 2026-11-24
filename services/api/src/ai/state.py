@@ -1,7 +1,7 @@
 """
 MSGI One — AI Command Centre State Definition
 Principles: Kleppmann Data Flow & LangGraph Typed State Contracts.
-Gate 7.3 & Gate 7.4 Typed Architecture.
+Gate 7.3 & Gate 7.4 Typed Architecture + Phase 8 Extensions.
 """
 
 from typing import TypedDict, Any, Optional, List, Dict
@@ -17,7 +17,7 @@ class CommandCentreState(TypedDict, total=False):
 
     # 2. User Query & Intent Classification
     prompt: str
-    intent: str  # 'alumni', 'career', 'mentorship', 'events', 'orchestrator', 'rejected'
+    intent: str  # 'alumni', 'career', 'mentorship', 'events', 'scheduling', 'messaging', 'admin_ops', 'orchestrator', 'rejected'
     target_role: Optional[str]
     extracted_skills: List[str]
 
@@ -28,6 +28,9 @@ class CommandCentreState(TypedDict, total=False):
     recommended_jobs: Optional[List[Dict[str, Any]]]
     recommended_events: Optional[List[Dict[str, Any]]]
     alumni_matches: Optional[List[Dict[str, Any]]]
+    recommended_slots: Optional[List[Dict[str, Any]]]
+    drafted_message: Optional[Dict[str, Any]]
+    admin_summary: Optional[Dict[str, Any]]
 
     # 4. Human-In-The-Loop Approval Gates (Rule 15)
     pending_approval: Optional[Dict[str, Any]]

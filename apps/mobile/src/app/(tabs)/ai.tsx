@@ -17,6 +17,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
+import { useRouter, Href } from 'expo-router';
 import { Colors, Typography, Spacing, BorderRadius } from '../../constants/theme';
 import { api } from '../../lib/api';
 
@@ -29,6 +30,7 @@ interface Message {
 }
 
 export default function AiScreen() {
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [pendingApproval, setPendingApproval] = useState<any | null>(null);
@@ -37,15 +39,16 @@ export default function AiScreen() {
     {
       id: 'welcome-001',
       role: 'ai',
-      text: 'Welcome to MSGI AI Command Centre. I orchestrate alumni discovery, career skill-gap analysis, learning roadmaps, and mentor matching grounded in institutional data.',
+      text: 'Welcome to MSGI AI Command Centre. I orchestrate alumni discovery, career skill-gap analysis, scheduling, messaging drafts, and mentor matching grounded in institutional data.',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
 
   const samplePrompts = [
     'Analyze my skill gap for AI Engineer',
-    'Recommend mentors for AI in Japan',
-    'Generate learning roadmap for missing skills',
+    'Suggest meeting slots with Kenji Sato',
+    'Draft message to Kenji Sato about Tokyo AI roles',
+    'Schedule a meeting with Kenji Sato for career guidance',
     'Apply to AI Research Intern at Rakuten Symphony',
   ];
 
@@ -283,7 +286,41 @@ export default function AiScreen() {
                   </View>
                 )}
 
-                {/* 4. Evidence Grounding Audit */}
+                {/* 4. Scheduling Slots Artifact */}
+                {msg.aiData.recommended_slots && msg.aiData.recommended_slots.length > 0 && (
+                  <View style={styles.artifactCard}>
+                    <Text style={styles.artifactTitle}>Suggested UTC Meeting Windows</Text>
+                    {msg.aiData.recommended_slots.slice(0, 3).map((s: any, idx: number) => (
+                      <Text key={idx} style={styles.evidenceItem}>
+                        • {s.local_label || s.start_utc} ({s.alumni_timezone || 'UTC'})
+                      </Text>
+                    ))}
+                    <TouchableOpacity
+                      style={[styles.connectButton, { alignSelf: 'flex-start', marginTop: Spacing.xs }]}
+                      onPress={() => router.push('/meetings' as Href)}
+                    >
+                      <Text style={styles.connectButtonText}>Open Meetings Scheduler</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* 5. Drafted Message Artifact */}
+                {msg.aiData.drafted_message && (
+                  <View style={styles.artifactCard}>
+                    <Text style={styles.artifactTitle}>Prepared Message Draft (Requires Review)</Text>
+                    <Text style={styles.evidenceItem}>
+                      {msg.aiData.drafted_message.draft_text || msg.aiData.drafted_message.summary}
+                    </Text>
+                    <TouchableOpacity
+                      style={[styles.connectButton, { alignSelf: 'flex-start', marginTop: Spacing.xs }]}
+                      onPress={() => router.push('/messages' as Href)}
+                    >
+                      <Text style={styles.connectButtonText}>Open Messages Inbox</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* 6. Evidence Grounding Audit */}
                 {msg.aiData.evidence && msg.aiData.evidence.length > 0 && (
                   <View style={styles.evidenceAuditBar}>
                     <Text style={styles.evidenceTitle}>Ground-Truth Verification Sources:</Text>

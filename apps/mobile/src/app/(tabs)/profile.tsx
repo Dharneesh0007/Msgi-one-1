@@ -12,9 +12,16 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
+import {
+  getBiometricCapability,
+  isBiometricLockEnabled,
+  promptBiometricUnlock,
+  setBiometricLockEnabled,
+} from '../../lib/biometrics';
 import { VerificationStatusResponse } from '../../types/business';
 import { Colors, Typography, Spacing, BorderRadius } from '../../constants/theme';
 
@@ -32,10 +39,27 @@ export default function ProfileScreen() {
   const [degree, setDegree] = useState('B.Tech Computer Science');
   const [department, setDepartment] = useState('Computer Science');
   const [submittingVerify, setSubmittingVerify] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled, setBiometricEnabledState] = useState(false);
 
   useEffect(() => {
     api.getMyVerificationStatus().then(setVerificationStatus).catch(() => null);
+    Promise.all([getBiometricCapability(), isBiometricLockEnabled()])
+      .then(([cap, enabled]) => {
+        setBiometricAvailable(cap.hasHardware && cap.isEnrolled);
+        setBiometricEnabledState(enabled);
+      })
+      .catch(() => null);
   }, []);
+
+  const handleToggleBiometric = async (nextVal: boolean) => {
+    if (nextVal) {
+      const ok = await promptBiometricUnlock('Enable Biometric Lock for MSGI One');
+      if (!ok) return;
+    }
+    await setBiometricLockEnabled(nextVal);
+    setBiometricEnabledState(nextVal);
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -191,6 +215,21 @@ export default function ProfileScreen() {
           Under FERPA and institutional data policy, your email address, phone number, and physical
           coordinates are never exposed to public directory searches without your explicit consent.
         </Text>
+      </View>
+
+      {/* Biometric App Lock */}
+      <View style={[styles.sectionCard, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+        <View style={{ flex: 1, paddingRight: Spacing.sm }}>
+          <Text style={styles.sectionTitle}>Biometric App Lock</Text>
+          <Text style={styles.fieldValueReadOnly}>
+            {biometricAvailable ? 'Require device biometrics on app launch' : 'No enrolled biometrics detected on this device'}
+          </Text>
+        </View>
+        <Switch
+          value={biometricEnabled}
+          disabled={!biometricAvailable}
+          onValueChange={handleToggleBiometric}
+        />
       </View>
 
       {/* Institutional Verification Section for Unverified / Alumni Candidates */}

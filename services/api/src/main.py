@@ -5,6 +5,9 @@ Architecture: 7-Layer Architecture (Sommerville Ch. 6, Evans DDD)
 """
 
 from datetime import datetime, timezone
+import logging
+import time
+import uuid
 from typing import Any, Dict
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -33,6 +36,7 @@ from src.routers.scheduling import router as scheduling_router
 from src.routers.messaging import router as messaging_router
 from src.routers.ws_chat import router as ws_chat_router
 from src.routers.rooms import router as rooms_router
+from src.routers.devices import router as devices_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -53,7 +57,22 @@ app.add_middleware(
 )
 
 
-# Normalization Middleware for Client Build Compatibility
+# Normalization & Correlation-ID Observability Middleware
+logger = logging.getLogger("msgi_one.api")
+
+
+@app.middleware("http")
+async def correlation_and_timing_middleware(request: Request, call_next):
+    req_id = request.headers.get("X-Request-ID") or f"req-{uuid.uuid4().hex[:12]}"
+    request.state.request_id = req_id
+    t0 = time.perf_counter()
+    response = await call_next(request)
+    elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+    response.headers["X-Request-ID"] = req_id
+    response.headers["X-Process-Time-Ms"] = str(elapsed_ms)
+    return response
+
+
 @app.middleware("http")
 async def normalize_api_v1_prefix_middleware(request: Request, call_next):
     """
@@ -173,9 +192,42 @@ def health_check() -> HealthResponseEnvelope:
             timestamp=datetime.now(timezone.utc),
         ),
         error=None,
-        meta={"phase": "Phase 4 — Extended MVP, Realtime and Android Release Preparation"},
+        meta={"phase": "Phase 4 — Extended MVP, Realtime and Android Release Preparation", "readiness_version": "V2-Phase-11"},
         timestamp=datetime.now(timezone.utc),
     )
+
+
+@app.get(
+    "/ready",
+    status_code=status.HTTP_200_OK,
+    tags=["System"],
+    summary="Service Readiness Check",
+)
+@app.get(
+    f"{settings.API_V1_STR}/ready",
+    status_code=status.HTTP_200_OK,
+    tags=["System"],
+    summary="Versioned Service Readiness Check",
+)
+def readiness_check(request: Request) -> Dict[str, Any]:
+    """Reports dependency readiness status without leaking secrets."""
+    return {
+        "status": "success",
+        "data": {
+            "service": "msgi-one-api",
+            "ready": True,
+            "components": {
+                "database": "configured" if settings.DATABASE_URL else "unconfigured",
+                "redis_bus": "configured" if settings.REDIS_URL else "in_memory_fallback",
+                "livekit": "configured" if (settings.LIVEKIT_URL and settings.LIVEKIT_API_KEY) else "awaiting_credentials",
+                "ai_orchestrator": "ready",
+            },
+            "request_id": getattr(request.state, "request_id", None),
+        },
+        "error": None,
+        "meta": {"environment": settings.ENVIRONMENT},
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 # Mount Versioned API Routers across both /api/v1 and /api/v1/api/v1 prefixes
@@ -201,6 +253,7 @@ for pfx in API_PREFIXES:
     app.include_router(scheduling_router, prefix=pfx, include_in_schema=is_primary)
     app.include_router(messaging_router, prefix=pfx, include_in_schema=is_primary)
     app.include_router(rooms_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(devices_router, prefix=pfx, include_in_schema=is_primary)
 
 # Real-time WebSocket endpoint (/ws/chat)
 app.include_router(ws_chat_router)

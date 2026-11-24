@@ -1,15 +1,13 @@
 """
 MSGI One — LangGraph Master Orchestrator Graph
-Phase 7 — Intelligent AI Infrastructure (Gates 7.3 & 7.4)
-Assembles Supervisor, Domain Agents, Synthesizer, Checkpointer, and Multi-Tenant Thread Registry.
-Principles: Kleppmann Fault Tolerance & Pressman Process Management.
+Phase 7 & Phase 8 — Intelligent AI Infrastructure (Gates 7.3, 7.4, & Domain Agents)
+Assembles Supervisor, Domain Agents (Alumni, Career, Learning, Mentorship, Events,
+Scheduling, Messaging, Admin Ops), Synthesizer, Checkpointer, and Multi-Tenant Thread Registry.
 """
 
-import os
 import time
 import uuid
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Dict, Any, List, Optional
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.base import BaseCheckpointSaver
@@ -21,9 +19,12 @@ from src.ai.agents.career import career_agent_node
 from src.ai.agents.learning import learning_agent_node
 from src.ai.agents.mentorship import mentorship_agent_node
 from src.ai.agents.events import events_agent_node
+from src.ai.agents.scheduling import scheduling_agent_node
+from src.ai.agents.messaging import messaging_agent_node
+from src.ai.agents.admin_ops import admin_ops_agent_node
 from src.ai.checkpoint import thread_registry, get_sync_checkpointer
-from src.ai.provider import provider, verify_source_citations
-from src.ai.rag import evaluate_grounding, sanitize_retrieved_content, INSUFFICIENT_EVIDENCE_REFUSAL
+from src.ai.provider import verify_source_citations
+from src.ai.rag import evaluate_grounding, INSUFFICIENT_EVIDENCE_REFUSAL
 from src.ai.observability import global_circuit_breaker, global_budget_manager, calculate_request_cost
 from src.core.dependencies import AuthenticatedUser
 
@@ -37,6 +38,9 @@ def synthesizer_node(state: CommandCentreState) -> CommandCentreState:
     Synthesizes domain outputs into a structured executive brief grounded in verified evidence.
     Executes algorithmic citation verification against retrieved entity identifiers.
     """
+    if state.get("status") == "rejected":
+        return state
+
     if state.get("status") == "interrupted":
         pending = state.get("pending_approval") or {}
         state["final_summary"] = (
@@ -48,7 +52,6 @@ def synthesizer_node(state: CommandCentreState) -> CommandCentreState:
 
     parts: List[str] = []
 
-    # 1. Career & Skill Gap
     gap = state.get("skill_gap")
     if gap:
         parts.append(
@@ -56,58 +59,75 @@ def synthesizer_node(state: CommandCentreState) -> CommandCentreState:
             f"Identified {gap['missing_skills_count']} competency gaps to target."
         )
 
-    # 2. Learning Roadmap
     roadmap = state.get("learning_roadmap")
     if roadmap:
         parts.append(
             f"Learning Path: Recommended {len(roadmap)} sequenced course(s), starting with '{roadmap[0]['course_title']}' ({roadmap[0]['provider']})."
         )
 
-    # 3. Mentors
     mentors = state.get("recommended_mentors")
     if mentors:
         m_names = ", ".join(m.get("full_name", "") for m in mentors[:2])
         parts.append(f"Recommended Mentor(s): {m_names}.")
 
-    # 4. Jobs
     jobs = state.get("recommended_jobs")
     if jobs:
         j_titles = ", ".join(j.get("title", "") for j in jobs[:2])
         parts.append(f"Matching Opportunity(s): {j_titles}.")
 
-    # 5. Events
     events = state.get("recommended_events")
     if events:
         e_titles = ", ".join(e.get("title", "") for e in events[:2])
         parts.append(f"Upcoming Event(s): {e_titles}.")
 
-    # 6. Alumni
     alumni = state.get("alumni_matches")
     if alumni:
         a_names = ", ".join(a.get("full_name", "") for a in alumni[:2])
         parts.append(f"Alumni Network Match(es): {a_names}.")
+
+    slots = state.get("recommended_slots")
+    if slots:
+        parts.append(f"Scheduling Availability: Found {len(slots)} matching UTC meeting window(s), starting {slots[0].get('start_utc')}.")
+
+    drafted = state.get("drafted_message")
+    if drafted:
+        if "draft_text" in drafted:
+            parts.append(f"Drafted Message Ready (Not Sent): {drafted['draft_text']}")
+        elif "summary" in drafted:
+            parts.append(f"Conversation Summary ({drafted.get('message_count', 0)} messages): {drafted['summary']}")
+
+    admin_sum = state.get("admin_summary")
+    if admin_sum:
+        parts.append(
+            f"Institutional Admin Summary: {admin_sum.get('total_users', 0)} total users, "
+            f"{admin_sum.get('pending_verifications', 0)} pending verifications, "
+            f"{admin_sum.get('open_reports', 0)} open moderation reports."
+        )
 
     if not parts:
         state["final_summary"] = "Your request was processed successfully. No immediate matching records were found."
     else:
         state["final_summary"] = " ".join(parts)
 
-    # Citation Verification against known domain entity identifiers
     candidate_citations: List[str] = []
     for m in (state.get("recommended_mentors") or []):
-        if m.get("id"): candidate_citations.append(str(m["id"]))
-        if m.get("mentor_id"): candidate_citations.append(str(m["mentor_id"]))
+        if m.get("id"):
+            candidate_citations.append(str(m["id"]))
+        if m.get("mentor_id"):
+            candidate_citations.append(str(m["mentor_id"]))
     for j in (state.get("recommended_jobs") or []):
-        if j.get("id"): candidate_citations.append(str(j["id"]))
+        if j.get("id"):
+            candidate_citations.append(str(j["id"]))
     for e in (state.get("recommended_events") or []):
-        if e.get("id"): candidate_citations.append(str(e["id"]))
+        if e.get("id"):
+            candidate_citations.append(str(e["id"]))
     for a in (state.get("alumni_matches") or []):
-        if a.get("id"): candidate_citations.append(str(a["id"]))
+        if a.get("id"):
+            candidate_citations.append(str(a["id"]))
 
     evidence = state.get("evidence", [])
     validated = verify_source_citations(candidate_citations, evidence)
 
-    # If retrieved_docs are present, run multi-tier factual grounding
     retrieved = state.get("retrieved_docs")
     if retrieved:
         grounding_result = evaluate_grounding(parts, retrieved, query=state.get("prompt", ""))
@@ -133,23 +153,29 @@ def route_supervisor(state: CommandCentreState) -> str:
         return "mentorship_agent"
     if intent == "events":
         return "events_agent"
-    # Default: multi-agent orchestrator
+    if intent == "scheduling":
+        return "scheduling_agent"
+    if intent == "messaging":
+        return "messaging_agent"
+    if intent == "admin_ops":
+        return "admin_ops_agent"
     return "career_agent"
 
 
 def build_command_centre_graph(checkpointer: Optional[BaseCheckpointSaver] = None):
     builder = StateGraph(CommandCentreState)
 
-    # Add Nodes
     builder.add_node("supervisor", supervisor_node)
     builder.add_node("alumni_agent", alumni_agent_node)
     builder.add_node("career_agent", career_agent_node)
     builder.add_node("learning_agent", learning_agent_node)
     builder.add_node("mentorship_agent", mentorship_agent_node)
     builder.add_node("events_agent", events_agent_node)
+    builder.add_node("scheduling_agent", scheduling_agent_node)
+    builder.add_node("messaging_agent", messaging_agent_node)
+    builder.add_node("admin_ops_agent", admin_ops_agent_node)
     builder.add_node("synthesizer", synthesizer_node)
 
-    # Define Workflow Edges
     builder.add_edge(START, "supervisor")
 
     builder.add_conditional_edges(
@@ -161,29 +187,36 @@ def build_command_centre_graph(checkpointer: Optional[BaseCheckpointSaver] = Non
             "career_agent": "career_agent",
             "mentorship_agent": "mentorship_agent",
             "events_agent": "events_agent",
+            "scheduling_agent": "scheduling_agent",
+            "messaging_agent": "messaging_agent",
+            "admin_ops_agent": "admin_ops_agent",
         },
     )
 
-    # Alumni Branch
     builder.add_edge("alumni_agent", "synthesizer")
 
-    # Career Branch (Career -> Learning -> Synthesizer or Orchestrator cascade)
     def route_after_career(state: CommandCentreState) -> str:
         if state.get("status") == "interrupted":
             return "synthesizer"
         return "learning_agent"
 
-    builder.add_conditional_edges("career_agent", route_after_career, {"synthesizer": "synthesizer", "learning_agent": "learning_agent"})
+    builder.add_conditional_edges(
+        "career_agent",
+        route_after_career,
+        {"synthesizer": "synthesizer", "learning_agent": "learning_agent"},
+    )
 
     def route_after_learning(state: CommandCentreState) -> str:
-        intent = state.get("intent")
-        if intent == "orchestrator":
+        if state.get("intent") == "orchestrator":
             return "mentorship_agent"
         return "synthesizer"
 
-    builder.add_conditional_edges("learning_agent", route_after_learning, {"mentorship_agent": "mentorship_agent", "synthesizer": "synthesizer"})
+    builder.add_conditional_edges(
+        "learning_agent",
+        route_after_learning,
+        {"mentorship_agent": "mentorship_agent", "synthesizer": "synthesizer"},
+    )
 
-    # Mentorship Branch
     def route_after_mentorship(state: CommandCentreState) -> str:
         if state.get("status") == "interrupted":
             return "synthesizer"
@@ -191,12 +224,16 @@ def build_command_centre_graph(checkpointer: Optional[BaseCheckpointSaver] = Non
             return "alumni_agent"
         return "synthesizer"
 
-    builder.add_conditional_edges("mentorship_agent", route_after_mentorship, {"synthesizer": "synthesizer", "alumni_agent": "alumni_agent"})
+    builder.add_conditional_edges(
+        "mentorship_agent",
+        route_after_mentorship,
+        {"synthesizer": "synthesizer", "alumni_agent": "alumni_agent"},
+    )
 
-    # Events Branch
     builder.add_edge("events_agent", "synthesizer")
-
-    # Synthesis to End
+    builder.add_edge("scheduling_agent", "synthesizer")
+    builder.add_edge("messaging_agent", "synthesizer")
+    builder.add_edge("admin_ops_agent", "synthesizer")
     builder.add_edge("synthesizer", END)
 
     if checkpointer is None:
@@ -204,25 +241,18 @@ def build_command_centre_graph(checkpointer: Optional[BaseCheckpointSaver] = Non
     return builder.compile(checkpointer=checkpointer)
 
 
-# Global compiled graph
 command_centre_graph = build_command_centre_graph()
 
 
 def resume_interrupted_graph(
     session_id: str,
-    decision: str,  # 'approved' or 'rejected'
+    decision: str,
     user: AuthenticatedUser,
     execution_result: Optional[Dict[str, Any]] = None,
 ) -> CommandCentreState:
-    """
-    Resumes an interrupted LangGraph state upon human decision (Gate 7.3 & Gate 7.4).
-    Enforces multi-tenant thread validation: user must be the registered owner.
-    Updates checkpoint state, sets status to 'completed', and runs final synthesis.
-    """
     thread_registry.register_or_verify(session_id, user.id)
     config = {"configurable": {"thread_id": session_id}}
 
-    # Load current checkpoint state
     snapshot = command_centre_graph.get_state(config)
     if snapshot and snapshot.values:
         state = dict(snapshot.values)
@@ -266,13 +296,11 @@ def resume_interrupted_graph(
             "Institutional records remain completely unchanged per MSGI Rule 15."
         )
 
-    # Persist updated state to checkpointer
     try:
         command_centre_graph.update_state(config, state)
     except Exception:
         pass
 
-    # Update in-memory audit store
     if session_id in _AGENT_RUNS_STORE:
         _AGENT_RUNS_STORE[session_id]["status"] = "completed"
         _AGENT_RUNS_STORE[session_id]["final_summary"] = state["final_summary"]
@@ -285,17 +313,11 @@ def run_command_centre(
     user: AuthenticatedUser,
     session_id: Optional[str] = None,
 ) -> CommandCentreState:
-    """
-    Executes command centre query synchronously.
-    Enforces multi-tenant thread ownership validation via thread_registry.
-    """
     start_time = time.time()
     sid = session_id or f"sess-{uuid.uuid4().hex[:12]}"
 
-    # Multi-tenant thread isolation check (Gate 7.4)
     thread_registry.register_or_verify(sid, user.id)
 
-    # Circuit breaker check (Gate 7.8)
     if not global_circuit_breaker.can_execute():
         elapsed_ms = int((time.time() - start_time) * 1000)
         return {
@@ -328,7 +350,7 @@ def run_command_centre(
         "latency_ms": 0,
     }
 
-    config = {"configurable": {"thread_id": sid}}
+    config = {"configurable": {"thread_id": sid}, "recursion_limit": 16}
     try:
         result_state = command_centre_graph.invoke(initial_state, config=config)
     except Exception as exc:
@@ -336,7 +358,7 @@ def run_command_centre(
         fallback_summary = (
             f"MSGI AI Command Centre received your request: '{prompt}'. "
             "Our multi-agent orchestration pipeline is available to assist with alumni discovery, "
-            "career guidance, and mentor matching across the MSGI ecosystem."
+            "career guidance, scheduling, messaging, and mentor matching across the MSGI ecosystem."
         )
         result_state = {
             **initial_state,
@@ -369,7 +391,6 @@ def run_command_centre(
     global_budget_manager.record_user_usage(user.id, tokens)
     estimated_cost = calculate_request_cost(tokens // 2, tokens // 2)
 
-    # Audit log in-memory
     _AGENT_RUNS_STORE[sid] = {
         "id": sid,
         "user_id": user.id,
@@ -389,7 +410,4 @@ async def arun_command_centre(
     user: AuthenticatedUser,
     session_id: Optional[str] = None,
 ) -> CommandCentreState:
-    """
-    Executes command centre query asynchronously.
-    """
     return run_command_centre(prompt=prompt, user=user, session_id=session_id)

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import { useRouter, Href } from 'expo-router';
 import { Colors, Typography, Spacing, BorderRadius } from '../../constants/theme';
 import { UserProfileResponse } from '../../types/auth';
 import { WelcomeBanner } from './WelcomeBanner';
@@ -14,6 +15,7 @@ export function AdminDashboard({
   user: UserProfileResponse | null;
   dashboard: ReturnType<typeof useDashboardData>;
 }) {
+  const router = useRouter();
   const [annTitle, setAnnTitle] = useState('');
   const [annBody, setAnnBody] = useState('');
 
@@ -65,6 +67,15 @@ export function AdminDashboard({
         title="Admin Ops & AI Provider Governance"
         subtitle="Analyze verification queues, audit metrics, and external AI provider usage."
       />
+
+      <TouchableOpacity
+        style={{ backgroundColor: Colors.primary, borderRadius: BorderRadius.md, padding: Spacing.sm, alignItems: 'center', marginBottom: Spacing.md }}
+        onPress={() => router.push('/admin-ai' as Href)}
+      >
+        <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13 }}>
+          Open AI Provider Key Vault & Cost Control Centre →
+        </Text>
+      </TouchableOpacity>
 
       {/* Verification Queue */}
       <View style={styles.section}>

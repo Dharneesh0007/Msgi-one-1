@@ -337,6 +337,26 @@ class DeterministicAIProvider(BaseAIProvider):
             action_type = "register_event"
             target_entity_id = "event-gala-001"
             target_entity_name = "Global AI & Tech Alumni Gala 2026"
+        elif ("schedule" in p_lower or "book" in p_lower) and "meeting" in p_lower:
+            requires_approval = True
+            action_type = "create_meeting_request"
+            target_entity_id = "user-kenji-001" if "kenji" in p_lower else "user-ananya-002"
+            target_entity_name = "Kenji Sato" if "kenji" in p_lower else "Ananya Sharma"
+        elif "reschedule meeting" in p_lower:
+            requires_approval = True
+            action_type = "reschedule_meeting"
+            target_entity_id = "meeting-latest"
+            target_entity_name = "Scheduled Mentorship Session"
+        elif "cancel meeting" in p_lower:
+            requires_approval = True
+            action_type = "cancel_meeting"
+            target_entity_id = "meeting-latest"
+            target_entity_name = "Scheduled Mentorship Session"
+        elif "send message to" in p_lower:
+            requires_approval = True
+            action_type = "send_message"
+            target_entity_id = "user-kenji-001" if "kenji" in p_lower else "user-ananya-002"
+            target_entity_name = "Kenji Sato" if "kenji" in p_lower else "Ananya Sharma"
 
         # 3. Target Role Extraction
         target_role = None
@@ -363,8 +383,18 @@ class DeterministicAIProvider(BaseAIProvider):
                 intent = "mentorship"
             elif action_type == "register_event":
                 intent = "events"
+            elif action_type in ("create_meeting_request", "reschedule_meeting", "cancel_meeting"):
+                intent = "scheduling"
+            elif action_type == "send_message":
+                intent = "messaging"
             else:
                 intent = "orchestrator"
+        elif "admin" in p_lower and any(k in p_lower for k in ["summary", "audit", "verification", "moderation", "analytics"]):
+            intent = "admin_ops"
+        elif any(k in p_lower for k in ["draft message", "summarize conversation", "conversation summary"]):
+            intent = "messaging"
+        elif any(k in p_lower for k in ["availability", "meeting slot", "suggest slot", "suggest meeting"]):
+            intent = "scheduling"
         elif "alumni" in p_lower and "mentor" not in p_lower:
             intent = "alumni"
         elif any(k in p_lower for k in ["mentor", "mentorship", "advise", "advisor"]):

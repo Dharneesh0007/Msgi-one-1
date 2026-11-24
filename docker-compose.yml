@@ -1,0 +1,45 @@
+# MSGI One — Local Staging / Self-Hosted Infrastructure Stack (Phase 11)
+# Note: Production hosted Supabase / LiveKit Cloud / managed Redis remain separate;
+# this compose stack provides reproducible local staging for API + Redis + LiveKit dev.
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./services/api/.env.example
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      ENVIRONMENT: staging
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  livekit:
+    image: livekit/livekit-server:latest
+    profiles: ["media"]
+    command: --dev --bind 0.0.0.0
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"

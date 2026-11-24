@@ -346,4 +346,35 @@ export const api = {
     api.post<any>(`/api/v1/rooms/${meetingId}/remove`, { target_user_id: targetUserId }),
   endMeetingRoom: (meetingId: string) =>
     api.post<any>(`/api/v1/rooms/${meetingId}/end`),
+
+  // Phase 8 & 9: Admin AI Control Plane, Push Devices & SSE
+  listAdminAIProviders: () => api.get<any[]>('/api/v1/admin/ai/providers'),
+  upsertAdminAIProvider: (payload: {
+    config_id?: string;
+    provider: 'gemini' | 'openai' | 'anthropic' | 'deepseek';
+    display_name: string;
+    model_id: string;
+    api_key: string;
+    is_enabled?: boolean;
+    is_primary?: boolean;
+    fallback_priority?: number;
+    daily_budget_usd?: number;
+    monthly_budget_usd?: number;
+    requests_per_minute_limit?: number;
+  }) => api.post<any>('/api/v1/admin/ai/providers', payload),
+  rotateAdminAIProviderKey: (configId: string, apiKey: string) =>
+    api.post<any>(`/api/v1/admin/ai/providers/${configId}/rotate-key`, { api_key: apiKey }),
+  verifyAdminAIProvider: (configId: string) =>
+    api.post<any>(`/api/v1/admin/ai/providers/${configId}/verify`),
+  deleteAdminAIProvider: (configId: string) =>
+    api.delete<any>(`/api/v1/admin/ai/providers/${configId}`),
+  getAdminAIUsage: () => api.get<any>('/api/v1/admin/ai/usage'),
+  registerPushToken: (expoPushToken: string, platform: 'android' | 'ios' | 'web' = 'android', deviceName?: string) =>
+    api.post<any>('/api/v1/devices/push-token', {
+      expo_push_token: expoPushToken,
+      platform,
+      device_name: deviceName,
+    }),
+  revokePushToken: (token: string) =>
+    api.delete<any>(`/api/v1/devices/push-token/${encodeURIComponent(token)}`),
 };

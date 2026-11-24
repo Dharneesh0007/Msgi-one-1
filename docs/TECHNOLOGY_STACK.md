@@ -18,18 +18,18 @@ Following the principles established by **Martin Kleppmann** (*Designing Data-In
 
 | Layer | Selected Technology | Version / Standard | Primary Justification |
 | :--- | :--- | :--- | :--- |
-| **Mobile Client** | React Native + Expo | Expo SDK 52+ / RN 0.76+ | Cross-platform native compilation, rapid Android APK generation via EAS, native UI performance. |
+| **Mobile Client** | React Native + Expo | Expo SDK 52+ / RN 0.76+ | Cross-platform native compilation, FlashList virtualization, TanStack Query, biometrics (`expo-local-authentication`), push (`expo-notifications`), LiveKit WebRTC SDK. |
 | **Navigation & Typing** | Expo Router + TypeScript | Expo Router v4 / TS 5.x | File-based typed routing, deep-linking, automatic Android back-button handling, zero runtime route drift. |
-| **Backend Framework** | FastAPI (Python) | FastAPI 0.115+ / Python 3.12 | Async I/O, native Pydantic v2 validation, automatic OpenAPI v3.1 schema generation, native AI ecosystem integration. |
+| **Backend Framework** | FastAPI (Python) | FastAPI 0.115+ / Python 3.12 | Async I/O, native Pydantic v2 validation, `/ready` probes, SSE streaming, automatic OpenAPI v3.1 schema generation. |
 | **Data Access & ORM** | SQLAlchemy + Alembic | SQLAlchemy 2.0 (Async) / Alembic 1.14+ | Type-safe SQL generation, connection pooling, ACID transaction guarantees, deterministic database migrations. |
-| **Primary Database** | PostgreSQL via Supabase | PostgreSQL 15+ | Relational integrity, ACID transactions, Row-Level Security (RLS), mature indexing (B-Tree, GIN, GiST). |
-| **Vector Engine** | pgvector | pgvector 0.7+ (Postgres extension) | In-database cosine vector indexing (HNSW/IVFFlat) for semantic search, eliminating secondary vector DB operational complexity. |
-| **Auth & Identity** | Supabase Auth | OAuth2 / JWT (RS256) | Battle-tested session management, secure refresh token rotation, native mobile deep-link callbacks. |
+| **Primary Database** | PostgreSQL via Supabase | PostgreSQL 15+ | Relational integrity, ACID transactions, Row-Level Security (RLS), `btree_gist` scheduling constraints, B-Tree/GIN/GiST indexing. |
+| **Vector Engine** | pgvector | pgvector 0.7+ (Postgres extension) | In-database cosine vector indexing (1536-dim L2-normalized) for semantic search, eliminating secondary vector DB dual writes. |
+| **Auth & Identity** | Supabase Auth | OAuth2 / JWT (RS256/ES256/HS256) | Verified JWKS / public-key signature validation, session revocation, server-derived RBAC (`PermissionChecker`). |
 | **File Storage** | Supabase Storage | S3-Compatible Object Store | Signed URLs for sensitive documents (resumes, transcripts), public CDN for avatar/event assets, RLS-backed buckets. |
-| **Realtime Engine** | Supabase Realtime | Postgres CDC (WebSockets) | Realtime notifications and status updates via PostgreSQL write-ahead log (WAL) replication, zero polling. |
-| **Agentic AI Engine** | LangGraph | LangGraph 0.2+ / LangChain 0.3+ | Explicit state machine graphs, deterministic routing, cyclic reasoning, human-in-the-loop approval gates. |
-| **LLM Gateway** | Google Gemini / Multi-Provider | Gemini 1.5/2.0 Flash / OpenAI API | High structured output fidelity, low latency, 1M+ context window for institutional documents, provider abstraction. |
-| **DevOps & Packaging** | Expo EAS + Containerized API | Docker / EAS Build / GitHub Actions | Reproducible Android AAB/APK builds, cloud container hosting, automated CI verification. |
+| **Realtime & Media** | WebSockets + Redis + LiveKit | `/ws/chat`, Redis 7.4 Pub/Sub, LiveKit SFU | Sequence-ordered durable chat with cursor sync, WebRTC audio/video + screen sharing gated by short-lived backend tokens. |
+| **Agentic AI Engine** | LangGraph | LangGraph 1.2+ | Explicit state machine graphs, deterministic routing, tamper-resistant Rule 15 HITL approvals (`args_hash` + TTL). |
+| **LLM Gateway** | AES-256-GCM Encrypted Multi-Provider Vault | Gemini / OpenAI / Anthropic / DeepSeek | Admin-managed encrypted key vault, capability routing, priority failover, circuit breakers, cost ledger. |
+| **DevOps & Packaging** | Expo EAS + Docker + GitHub Actions | `Dockerfile`, `docker-compose.yml`, CI workflow | Reproducible Android AAB/APK builds, non-root API containers, automated CI test & Pre-EAS export checks. |
 
 ---
 

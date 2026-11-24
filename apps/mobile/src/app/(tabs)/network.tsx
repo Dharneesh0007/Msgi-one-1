@@ -16,12 +16,16 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useRouter, Href } from 'expo-router';
+import { FlashList } from '@shopify/flash-list';
 import { api } from '../../lib/api';
+import { useAuth } from '../../context/AuthContext';
+import { loadOfflineReadCache, saveOfflineReadCache } from '../../lib/offlineQueue';
 import { AlumniDirectoryItem } from '../../types/business';
 import { Colors, Typography, Spacing, BorderRadius } from '../../constants/theme';
 
 export default function NetworkScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [batchFilter, setBatchFilter] = useState('');
@@ -61,14 +65,25 @@ export default function NetworkScreen() {
       }
 
       const res = await api.searchAlumni(params);
-      setAlumniList(res?.items || []);
+      const items = res?.items || [];
+      setAlumniList(items);
+      if (user?.id && !searchQuery.trim() && !selectedTag) {
+        saveOfflineReadCache(user.id, 'alumni_directory', items).catch(() => null);
+      }
     } catch (err: any) {
       console.warn('[Network] Failed to fetch alumni:', err.message);
+      if (user?.id) {
+        const cached = await loadOfflineReadCache<AlumniDirectoryItem[]>(user.id, 'alumni_directory');
+        if (cached && cached.length > 0) {
+          setAlumniList(cached);
+          setActionFeedback('Offline Mode: Showing cached verified alumni directory.');
+        }
+      }
     } finally {
       setIsLoading(false);
       setRefreshing(false);
     }
-  }, [searchQuery, selectedTag, batchFilter, mentorsOnly]);
+  }, [searchQuery, selectedTag, batchFilter, mentorsOnly, user?.id]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -137,31 +152,37 @@ export default function NetworkScreen() {
         </ScrollView>
       </View>
 
-      {/* Directory List */}
-      <ScrollView
-        contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
-      >
-        <View style={styles.privacyBanner}>
-          <Text style={styles.privacyBannerText}>
-            🔒 Institutional Directory: Direct emails and phone numbers are protected under FERPA/GDPR compliance.
-          </Text>
-        </View>
-
-        {isLoading && !refreshing ? (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator size="large" color={Colors.primary} />
-            <Text style={styles.loadingText}>Searching verified institutional alumni...</Text>
-          </View>
-        ) : alumniList.length === 0 ? (
-          <View style={styles.emptyBox}>
-            <Text style={styles.emptyIcon}>🔍</Text>
-            <Text style={styles.emptyTitle}>No Alumni Matches Found</Text>
-            <Text style={styles.emptySubtitle}>Try adjusting your search filters or tags.</Text>
-          </View>
-        ) : (
-          alumniList.map((alumnus) => (
-            <View key={alumnus.id} style={styles.alumniCard}>
+      {/* Virtualized Directory List (FlashList) */}
+      <View style={{ flex: 1 }}>
+        <FlashList
+          data={alumniList}
+          keyExtractor={(item) => item.id}
+          estimatedItemSize={170}
+          contentContainerStyle={styles.listContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
+          ListHeaderComponent={
+            <View style={styles.privacyBanner}>
+              <Text style={styles.privacyBannerText}>
+                🔒 Institutional Directory: Direct emails and phone numbers are protected under FERPA/GDPR compliance.
+              </Text>
+            </View>
+          }
+          ListEmptyComponent={
+            isLoading && !refreshing ? (
+              <View style={styles.loadingBox}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Searching verified institutional alumni...</Text>
+              </View>
+            ) : (
+              <View style={styles.emptyBox}>
+                <Text style={styles.emptyIcon}>🔍</Text>
+                <Text style={styles.emptyTitle}>No Alumni Matches Found</Text>
+                <Text style={styles.emptySubtitle}>Try adjusting your search filters or tags.</Text>
+              </View>
+            )
+          }
+          renderItem={({ item: alumnus }) => (
+            <View style={styles.alumniCard}>
               <View style={styles.cardHeader}>
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>{alumnus.full_name[0]}</Text>
@@ -204,9 +225,9 @@ export default function NetworkScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-          ))
-        )}
-      </ScrollView>
+          )}
+        />
+      </View>
 
       {/* Alumni Detail Modal Sheet */}
       {selectedAlumni && (

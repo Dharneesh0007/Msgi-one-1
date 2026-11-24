@@ -8,6 +8,8 @@ import React, { createContext, useContext, useEffect, useState, useMemo } from '
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { api, ApiError } from '../lib/api';
+import { revokeRegisteredPushToken } from '../lib/notifications';
+import { clearUserScopedCaches } from '../lib/queryClient';
 import { UserProfileResponse, UserRole } from '../types/auth';
 
 interface AuthContextType {
@@ -178,8 +180,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     setIsLoading(true);
     try {
+      await revokeRegisteredPushToken().catch(() => null);
       await api.logoutSession().catch(() => null);
       await supabase.auth.signOut();
+      await clearUserScopedCaches();
       setSession(null);
       setAuthUser(null);
       setUser(null);

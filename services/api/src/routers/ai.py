@@ -10,7 +10,8 @@ Endpoints:
 
 from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Path, HTTPException, status
+from fastapi import APIRouter, Depends, Path, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from src.core.dependencies import AuthenticatedUser, get_current_user
 from src.schemas.user import StandardEnvelope
 from src.schemas.ai import (
@@ -20,6 +21,7 @@ from src.schemas.ai import (
     ApprovalDecisionRequest,
 )
 from src.ai.graph import run_command_centre, _AGENT_RUNS_STORE
+from src.ai.streaming import stream_command_centre_events
 from src.ai.approvals import (
     get_pending_approvals,
     get_approval_by_id,
@@ -60,6 +62,9 @@ def chat_with_command_centre(
         recommended_jobs=state.get("recommended_jobs"),
         recommended_events=state.get("recommended_events"),
         alumni_matches=state.get("alumni_matches"),
+        recommended_slots=state.get("recommended_slots"),
+        drafted_message=state.get("drafted_message"),
+        admin_summary=state.get("admin_summary"),
         pending_approval=pending_obj,
         final_summary=state.get("final_summary", ""),
         evidence=state.get("evidence", []),
@@ -73,6 +78,32 @@ def chat_with_command_centre(
         data=data,
         timestamp=datetime.now(timezone.utc),
         meta={"execution_mode": "sandboxed_deterministic", "engine": "LangGraph 1.2"},
+    )
+
+
+@router.post(
+    "/chat/stream",
+    summary="Stream Real-Time AI Command Centre Response (SSE)",
+    description="Streams LangGraph status, tool telemetry, approval requests, tokens, citations, and usage over Server-Sent Events.",
+)
+async def stream_chat_with_command_centre(
+    request: AIChatRequest,
+    provider_config_id: Optional[str] = Query(default=None, description="Optional override provider config ID"),
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    return StreamingResponse(
+        stream_command_centre_events(
+            prompt=request.prompt,
+            user=current_user,
+            session_id=request.session_id,
+            preferred_config_id=provider_config_id,
+        ),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 

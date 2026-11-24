@@ -54,19 +54,19 @@ msgi-one/
 - **Git:** Version 2.40+
 
 ### 3.2 Environment Setup
-1. Copy the environment template:
-   ```bash
-   cp .env.example .env
-   ```
-2. Populate the `.env` variables with your Supabase project credentials and LLM provider key.
+1. Copy the environment templates (`cp .env.example .env` and `cp services/api/.env.example services/api/.env`).
+2. Populate Supabase credentials, `AI_VAULT_MASTER_KEY`, optional `REDIS_URL`, and `LIVEKIT_*` settings (or manage LLM keys safely at runtime inside **Admin AI Control Centre**).
 
-### 3.3 Running the Backend API
+### 3.3 Running the Backend API (Local or Docker Staging)
 ```bash
 cd services/api
 # Using uv (recommended)
 uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Or full staging container stack (API + Redis):
+docker compose up --build api redis
 ```
-Health Check Endpoint: `http://localhost:8000/api/v1/health`  
+Health & Readiness Endpoints: `http://localhost:8000/api/v1/health`, `http://localhost:8000/api/v1/ready`  
 Interactive OpenAPI Documentation: `http://localhost:8000/docs`
 
 ### 3.4 Running the Mobile App

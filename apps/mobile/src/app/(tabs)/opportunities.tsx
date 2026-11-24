@@ -16,11 +16,15 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { api } from '../../lib/api';
+import { useAuth } from '../../context/AuthContext';
+import { loadOfflineReadCache, saveOfflineReadCache } from '../../lib/offlineQueue';
 import { JobOpportunity, JobApplication } from '../../types/business';
 import { Colors, Typography, Spacing, BorderRadius } from '../../constants/theme';
 
 export default function OpportunitiesScreen() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'all' | 'internships' | 'full_time' | 'my_apps'>('all');
   const [jobs, setJobs] = useState<JobOpportunity[]>([]);
   const [myApplications, setMyApplications] = useState<JobApplication[]>([]);
@@ -39,17 +43,25 @@ export default function OpportunitiesScreen() {
       if (activeTab === 'full_time') params.opportunity_type = 'full_time';
 
       const res = await api.listJobs(params);
-      setJobs(res || []);
+      const loadedJobs = res || [];
+      setJobs(loadedJobs);
+      if (user?.id && activeTab === 'all') {
+        saveOfflineReadCache(user.id, 'jobs_feed', loadedJobs).catch(() => null);
+      }
 
       const apps = await api.getMyApplications();
       setMyApplications(apps || []);
     } catch (err: any) {
       console.warn('[Opportunities] Failed to fetch jobs:', err.message);
+      if (user?.id && activeTab === 'all') {
+        const cached = await loadOfflineReadCache<JobOpportunity[]>(user.id, 'jobs_feed');
+        if (cached) setJobs(cached);
+      }
     } finally {
       setIsLoading(false);
       setRefreshing(false);
     }
-  }, [activeTab]);
+  }, [activeTab, user?.id]);
 
   useEffect(() => {
     fetchJobs();
@@ -123,119 +135,125 @@ export default function OpportunitiesScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
-      >
+      <View style={{ flex: 1 }}>
         {isLoading && !refreshing ? (
           <View style={styles.loadingBox}>
             <ActivityIndicator size="large" color={Colors.primary} />
             <Text style={styles.loadingText}>Loading career opportunities...</Text>
           </View>
         ) : activeTab === 'my_apps' ? (
-          /* My Applications View */
-          myApplications.length === 0 ? (
-            <View style={styles.emptyBox}>
-              <Text style={styles.emptyIcon}>📄</Text>
-              <Text style={styles.emptyTitle}>No Applications Submitted</Text>
-              <Text style={styles.emptySubtitle}>Explore open listings and apply with one click.</Text>
-            </View>
-          ) : (
-            myApplications.map((app) => (
-              <View key={app.id} style={styles.card}>
+          <FlashList
+            data={myApplications}
+            keyExtractor={(item) => item.id}
+            estimatedItemSize={120}
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
+            ListEmptyComponent={
+              <View style={styles.emptyBox}>
+                <Text style={styles.emptyIcon}>📄</Text>
+                <Text style={styles.emptyTitle}>No Applications Submitted</Text>
+                <Text style={styles.emptySubtitle}>Explore open listings and apply with one click.</Text>
+              </View>
+            }
+            renderItem={({ item: appItem }) => (
+              <View style={styles.card}>
                 <View style={styles.cardHeader}>
                   <View>
-                    <Text style={styles.jobTitle}>{app.job_title}</Text>
-                    <Text style={styles.companyName}>{app.company}</Text>
+                    <Text style={styles.jobTitle}>{appItem.job_title}</Text>
+                    <Text style={styles.companyName}>{appItem.company}</Text>
                   </View>
                   <View style={styles.statusBadge}>
-                    <Text style={styles.statusText}>{app.status.toUpperCase()}</Text>
+                    <Text style={styles.statusText}>{appItem.status.toUpperCase()}</Text>
                   </View>
                 </View>
                 <Text style={styles.appliedDate}>
-                  Submitted: {new Date(app.submitted_at).toLocaleDateString()}
+                  Submitted: {new Date(appItem.submitted_at).toLocaleDateString()}
                 </Text>
-                {app.cover_note && (
-                  <Text style={styles.coverNotePreview}>Note: "{app.cover_note}"</Text>
+                {appItem.cover_note && (
+                  <Text style={styles.coverNotePreview}>Note: "{appItem.cover_note}"</Text>
                 )}
               </View>
-            ))
-          )
+            )}
+          />
         ) : (
-          /* Job Opportunities Feed */
-          jobs.map((job) => {
-            const hasApplied = appliedJobIds.has(job.id);
-            return (
-              <View key={job.id} style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <View style={styles.titleArea}>
-                    <Text style={styles.jobTitle}>{job.title}</Text>
-                    <Text style={styles.companyName}>{job.company}</Text>
+          <FlashList
+            data={jobs}
+            keyExtractor={(item) => item.id}
+            estimatedItemSize={210}
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />}
+            renderItem={({ item: job }) => {
+              const hasApplied = appliedJobIds.has(job.id);
+              return (
+                <View style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <View style={styles.titleArea}>
+                      <Text style={styles.jobTitle}>{job.title}</Text>
+                      <Text style={styles.companyName}>{job.company}</Text>
+                    </View>
+                    <View style={styles.typeBadge}>
+                      <Text style={styles.typeText}>{job.opportunity_type.replace('_', ' ').toUpperCase()}</Text>
+                    </View>
                   </View>
-                  <View style={styles.typeBadge}>
-                    <Text style={styles.typeText}>{job.opportunity_type.replace('_', ' ').toUpperCase()}</Text>
-                  </View>
-                </View>
 
-                <Text style={styles.locationText}>📍 {job.location}</Text>
+                  <Text style={styles.locationText}>📍 {job.location}</Text>
 
-                {/* Skill Overlap Analysis */}
-                {job.skill_overlap && (
-                  <View style={styles.skillMatchContainer}>
-                    <View style={styles.matchBadge}>
-                      <Text style={styles.matchScoreText}>
-                        {job.skill_overlap.match_percentage}% Skill Overlap
+                  {job.skill_overlap && (
+                    <View style={styles.skillMatchContainer}>
+                      <View style={styles.matchBadge}>
+                        <Text style={styles.matchScoreText}>
+                          {job.skill_overlap.match_percentage}% Skill Overlap
+                        </Text>
+                      </View>
+                      <Text style={styles.matchSkillsSummary}>
+                        Matched: {job.skill_overlap.matched_skills.join(', ') || 'None'}
                       </Text>
                     </View>
-                    <Text style={styles.matchSkillsSummary}>
-                      Matched: {job.skill_overlap.matched_skills.join(', ') || 'None'}
-                    </Text>
-                  </View>
-                )}
+                  )}
 
-                {/* Alumni Referral Indicator */}
-                {job.alumni_referral_available && (
-                  <View style={styles.referralBox}>
-                    <Text style={styles.referralText}>
-                      🤝 {job.alumni_count_at_company} verified alumni work at {job.company}
-                    </Text>
-                  </View>
-                )}
-
-                <View style={styles.cardFooter}>
-                  <TouchableOpacity
-                    style={styles.detailsButton}
-                    onPress={() => {
-                      setSelectedJob(job);
-                      setCoverNote('');
-                      setApplyMessage(null);
-                    }}
-                  >
-                    <Text style={styles.detailsButtonText}>View Details</Text>
-                  </TouchableOpacity>
-
-                  {hasApplied ? (
-                    <View style={styles.appliedPill}>
-                      <Text style={styles.appliedPillText}>✓ Applied</Text>
+                  {job.alumni_referral_available && (
+                    <View style={styles.referralBox}>
+                      <Text style={styles.referralText}>
+                        🤝 {job.alumni_count_at_company} verified alumni work at {job.company}
+                      </Text>
                     </View>
-                  ) : (
+                  )}
+
+                  <View style={styles.cardFooter}>
                     <TouchableOpacity
-                      style={styles.applyButton}
+                      style={styles.detailsButton}
                       onPress={() => {
                         setSelectedJob(job);
                         setCoverNote('');
                         setApplyMessage(null);
                       }}
                     >
-                      <Text style={styles.applyButtonText}>Apply Now</Text>
+                      <Text style={styles.detailsButtonText}>View Details</Text>
                     </TouchableOpacity>
-                  )}
+
+                    {hasApplied ? (
+                      <View style={styles.appliedPill}>
+                        <Text style={styles.appliedPillText}>✓ Applied</Text>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.applyButton}
+                        onPress={() => {
+                          setSelectedJob(job);
+                          setCoverNote('');
+                          setApplyMessage(null);
+                        }}
+                      >
+                        <Text style={styles.applyButtonText}>Apply Now</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
-              </View>
-            );
-          })
+              );
+            }}
+          />
         )}
-      </ScrollView>
+      </View>
 
       {/* Application & Details Modal Sheet */}
       {selectedJob && (
