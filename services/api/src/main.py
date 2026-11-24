@@ -29,6 +29,10 @@ from src.routers.admin import router as admin_router
 from src.routers.notifications import router as notifications_router
 from src.routers.extended import router as extended_router
 from src.routers.verifications import router as verifications_router
+from src.routers.scheduling import router as scheduling_router
+from src.routers.messaging import router as messaging_router
+from src.routers.ws_chat import router as ws_chat_router
+from src.routers.rooms import router as rooms_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -194,6 +198,12 @@ for pfx in API_PREFIXES:
     app.include_router(notifications_router, prefix=pfx, include_in_schema=is_primary)
     app.include_router(extended_router, prefix=pfx, include_in_schema=is_primary)
     app.include_router(verifications_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(scheduling_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(messaging_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(rooms_router, prefix=pfx, include_in_schema=is_primary)
+
+# Real-time WebSocket endpoint (/ws/chat)
+app.include_router(ws_chat_router)
 
 
 # Direct /me and convenience aliases for primary prefix (/api/v1) and double prefix (/api/v1/api/v1)

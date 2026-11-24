@@ -130,13 +130,13 @@ export function StudentDashboard({
         )}
       </View>
 
-      <UpcomingMeetingsSection />
+      <UpcomingMeetingsSection meetings={dashboard.meetings} />
       <PendingRequestsSection
         requests={dashboard.mentorRequests}
         mode="student"
         onRespond={dashboard.handleRespondMentorRequest}
       />
-      <UnreadMessagesSection />
+      <UnreadMessagesSection threads={dashboard.conversations} />
       <CareerOpportunitiesSection jobs={dashboard.jobs} />
 
       {/* Events */}

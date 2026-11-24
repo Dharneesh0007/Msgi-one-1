@@ -18,6 +18,11 @@ import {
 const DEFAULT_API_BASE = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_API_BASE;
 
+export function getWebSocketChatUrl(token: string): string {
+  const base = API_BASE_URL.replace(/\/api\/v1\/?$/, '').replace(/^http/i, 'ws');
+  return `${base}/ws/chat?token=${encodeURIComponent(token)}`;
+}
+
 export class ApiError extends Error {
   code: string;
   status: number;
@@ -119,6 +124,13 @@ export const api = {
     request<T>(endpoint, {
       ...options,
       method: 'PATCH',
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+
+  put: <T>(endpoint: string, body?: any, options?: RequestOptions) =>
+    request<T>(endpoint, {
+      ...options,
+      method: 'PUT',
       body: body ? JSON.stringify(body) : undefined,
     }),
 
@@ -275,4 +287,63 @@ export const api = {
   getImpactProgramme: (programmeId: string) => api.get<any>(`/api/v1/impact/programmes/${programmeId}`),
   registerVolunteerInterest: (programmeId: string, interestNote: string) =>
     api.post<any>(`/api/v1/impact/programmes/${programmeId}/volunteer-interest`, { interest_note: interestNote }),
+
+  // Phase 5: Scheduling & Meetings
+  getAlumniAvailability: (alumniId: string, daysAhead: number = 7) =>
+    api.get<any>(`/api/v1/scheduling/availability/${alumniId}?days_ahead=${daysAhead}`),
+  updateMyAvailability: (windows: any[]) =>
+    api.put<any[]>('/api/v1/scheduling/availability/me', { windows }),
+  createMeetingRequest: (payload: any, idempotencyKey?: string) =>
+    api.post<any>('/api/v1/meetings/requests', payload, idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : undefined),
+  listMeetingRequests: () => api.get<any[]>('/api/v1/meetings/requests'),
+  acceptMeetingRequest: (requestId: string, slotId: string) =>
+    api.post<any>(`/api/v1/meetings/requests/${requestId}/accept`, { slot_id: slotId }),
+  declineMeetingRequest: (requestId: string, reason?: string) =>
+    api.post<any>(`/api/v1/meetings/requests/${requestId}/decline`, { reason }),
+  counterProposeMeetingRequest: (requestId: string, proposedSlots: any[], note?: string) =>
+    api.post<any>(`/api/v1/meetings/requests/${requestId}/counter-propose`, { proposed_slots: proposedSlots, note }),
+  confirmMeetingCounterProposal: (requestId: string, slotId: string) =>
+    api.post<any>(`/api/v1/meetings/requests/${requestId}/confirm`, { slot_id: slotId }),
+  cancelMeetingRequest: (requestId: string) =>
+    api.post<any>(`/api/v1/meetings/requests/${requestId}/cancel`),
+  listMeetings: () => api.get<any[]>('/api/v1/meetings'),
+  rescheduleMeeting: (meetingId: string, newStartUtc: string, newEndUtc: string, reason?: string) =>
+    api.post<any>(`/api/v1/meetings/${meetingId}/reschedule`, { new_start_utc: newStartUtc, new_end_utc: newEndUtc, reason }),
+  cancelMeeting: (meetingId: string, reason?: string) =>
+    api.post<any>(`/api/v1/meetings/${meetingId}/cancel`, { reason }),
+  submitMeetingFeedback: (meetingId: string, rating?: number, feedback?: string) =>
+    api.post<any>(`/api/v1/meetings/${meetingId}/feedback`, { rating, feedback }),
+
+  // Phase 6: Real-Time Messaging & Safety
+  listConversations: (search?: string) =>
+    api.get<any[]>(`/api/v1/conversations${search ? `?search=${encodeURIComponent(search)}` : ''}`),
+  createOrGetConversation: (recipientId: string) =>
+    api.post<any>('/api/v1/conversations', { recipient_id: recipientId }),
+  listMessages: (conversationId: string, afterSeq: number = 0) =>
+    api.get<any[]>(`/api/v1/conversations/${conversationId}/messages?after_seq=${afterSeq}`),
+  sendMessageRest: (conversationId: string, body: string, clientIdempotencyKey?: string) =>
+    api.post<any>(`/api/v1/conversations/${conversationId}/messages`, {
+      body,
+      message_type: 'text',
+      client_idempotency_key: clientIdempotencyKey,
+    }),
+  markConversationRead: (conversationId: string, lastReadSeq: number) =>
+    api.post<any>(`/api/v1/conversations/${conversationId}/read`, { last_read_seq: lastReadSeq }),
+  blockUser: (blockedUserId: string, reason?: string) =>
+    api.post<any>('/api/v1/safety/blocks', { blocked_user_id: blockedUserId, reason }),
+  unblockUser: (blockedUserId: string) =>
+    api.delete<any>(`/api/v1/safety/blocks/${blockedUserId}`),
+  reportUser: (reportedUserId: string, category: string, description: string, messageId?: string) =>
+    api.post<any>('/api/v1/safety/reports', { reported_user_id: reportedUserId, category, description, message_id: messageId }),
+
+  // Phase 7: LiveKit Audio/Video Rooms
+  requestRoomToken: (meetingId: string, audioEnabled: boolean = true, videoEnabled: boolean = true) =>
+    api.post<any>(`/api/v1/rooms/${meetingId}/token`, { audio_enabled: audioEnabled, video_enabled: videoEnabled }),
+  getRoomState: (meetingId: string) => api.get<any>(`/api/v1/rooms/${meetingId}`),
+  admitRoomParticipant: (meetingId: string, targetUserId: string) =>
+    api.post<any>(`/api/v1/rooms/${meetingId}/admit`, { target_user_id: targetUserId }),
+  removeRoomParticipant: (meetingId: string, targetUserId: string) =>
+    api.post<any>(`/api/v1/rooms/${meetingId}/remove`, { target_user_id: targetUserId }),
+  endMeetingRoom: (meetingId: string) =>
+    api.post<any>(`/api/v1/rooms/${meetingId}/end`),
 };

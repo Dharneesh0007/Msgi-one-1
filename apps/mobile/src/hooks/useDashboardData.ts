@@ -23,6 +23,8 @@ import {
   AdminUserRoleRecord,
   ModerationReportItem,
   OperationalStatus,
+  MeetingItem,
+  ConversationItem,
 } from '../types/business';
 
 export function useDashboardData(
@@ -46,6 +48,8 @@ export function useDashboardData(
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
   const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
+  const [meetings, setMeetings] = useState<MeetingItem[]>([]);
+  const [conversations, setConversations] = useState<ConversationItem[]>([]);
 
   // Admin state
   const [pendingVerifications, setPendingVerifications] = useState<VerificationRequestItem[]>([]);
@@ -78,6 +82,8 @@ export function useDashboardData(
         notifRes,
         unreadRes,
         annRes,
+        mtgsRes,
+        convsRes,
       ] = await Promise.allSettled([
         api.searchAlumni({ verified_only: true, limit: 4 }),
         api.listMentors({ student_goal: 'AI Engineer' }),
@@ -91,6 +97,8 @@ export function useDashboardData(
         api.getNotifications(),
         api.getUnreadNotificationCount(),
         api.getAnnouncements(),
+        api.listMeetings(),
+        api.listConversations(),
       ]);
 
       if (alumniRes.status === 'fulfilled') setAlumniMatches(alumniRes.value?.items || []);
@@ -105,6 +113,8 @@ export function useDashboardData(
       if (notifRes.status === 'fulfilled') setNotifications(notifRes.value || []);
       if (unreadRes.status === 'fulfilled') setUnreadNotifCount(unreadRes.value?.unread_count || 0);
       if (annRes.status === 'fulfilled') setAnnouncements(annRes.value || []);
+      if (mtgsRes.status === 'fulfilled') setMeetings(mtgsRes.value || []);
+      if (convsRes.status === 'fulfilled') setConversations(convsRes.value || []);
 
       if (isAdmin) {
         const [vRes, sumRes, usersRes, repRes, statusRes] = await Promise.allSettled([
@@ -274,6 +284,8 @@ export function useDashboardData(
     notifications,
     unreadNotifCount,
     announcements,
+    meetings,
+    conversations,
     pendingVerifications,
     adminSummary,
     adminUsers,

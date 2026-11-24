@@ -275,4 +275,127 @@ export interface VerificationStatusResponse {
   requests: VerificationRequestItem[];
 }
 
+// Phase 5: Scheduling & Meetings
+export interface OpenSlotDTO {
+  start_utc: string;
+  end_utc: string;
+  alumni_timezone: string;
+  local_label: string;
+}
+
+export interface MeetingSlotItem {
+  id: string;
+  meeting_request_id: string;
+  proposed_by: string;
+  round_number: number;
+  start_utc: string;
+  end_utc: string;
+  status: 'proposed' | 'selected' | 'rejected' | 'expired';
+}
+
+export interface MeetingRequestItem {
+  id: string;
+  student_id: string;
+  student_name: string;
+  alumni_id: string;
+  alumni_name: string;
+  mentor_request_id?: string | null;
+  title: string;
+  purpose: string;
+  duration_minutes: number;
+  student_timezone: string;
+  status: 'pending' | 'accepted' | 'declined' | 'counter_proposed' | 'cancelled' | 'expired';
+  decline_reason?: string | null;
+  slots: MeetingSlotItem[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MeetingItem {
+  id: string;
+  meeting_request_id?: string | null;
+  student_id: string;
+  student_name: string;
+  alumni_id: string;
+  alumni_name: string;
+  title: string;
+  purpose: string;
+  scheduled_start: string;
+  scheduled_end: string;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
+  rescheduled_from_meeting_id?: string | null;
+  cancellation_reason?: string | null;
+  student_rating?: number | null;
+  student_feedback?: string | null;
+  alumni_notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Phase 6: Real-Time Messaging
+export interface ConversationItem {
+  id: string;
+  peer_id: string;
+  peer_name: string;
+  last_message_at?: string | null;
+  last_message_preview?: string | null;
+  last_seq: number;
+  unread_count: number;
+  peer_online: boolean;
+  created_at: string;
+}
+
+export interface MessageItem {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  seq: number;
+  body: string;
+  message_type: string;
+  status: 'sent' | 'delivered' | 'read';
+  client_idempotency_key?: string | null;
+  reply_to_message_id?: string | null;
+  created_at: string;
+}
+
+// Phase 7: LiveKit Rooms
+export interface RoomParticipantItem {
+  user_id: string;
+  role: 'host' | 'participant';
+  admission_status: 'waiting' | 'admitted' | 'removed' | 'left';
+  audio_enabled: boolean;
+  video_enabled: boolean;
+  screen_sharing: boolean;
+  joined_at?: string | null;
+}
+
+export interface RoomTokenData {
+  room_id: string;
+  meeting_id: string;
+  room_name: string;
+  livekit_url?: string | null;
+  token: string;
+  role: 'host' | 'participant';
+  admission_status: 'waiting' | 'admitted' | 'removed' | 'left';
+  waiting_room_enabled: boolean;
+  recording_enabled: boolean;
+  livekit_configured: boolean;
+  expires_at: string;
+}
+
+export interface RoomStateData {
+  room_id: string;
+  meeting_id: string;
+  room_name: string;
+  status: 'waiting' | 'active' | 'ended' | 'expired';
+  host_user_id: string;
+  waiting_room_enabled: boolean;
+  recording_enabled: boolean;
+  participants: RoomParticipantItem[];
+  started_at?: string | null;
+  ended_at?: string | null;
+  expires_at: string;
+}
+
+
 

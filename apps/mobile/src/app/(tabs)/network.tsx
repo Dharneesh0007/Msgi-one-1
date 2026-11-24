@@ -15,7 +15,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import { api } from '../../lib/api';
 import { AlumniDirectoryItem } from '../../types/business';
 import { Colors, Typography, Spacing, BorderRadius } from '../../constants/theme';
@@ -248,6 +248,35 @@ export default function NetworkScreen() {
             {actionFeedback ? (
               <Text style={{ fontSize: 12, color: Colors.primary, marginBottom: Spacing.sm }}>{actionFeedback}</Text>
             ) : null}
+
+            <View style={{ flexDirection: 'row', gap: Spacing.xs, marginBottom: Spacing.sm, flexWrap: 'wrap' }}>
+              <TouchableOpacity
+                style={[styles.detailButton, { flex: 1, alignItems: 'center', backgroundColor: Colors.success }]}
+                onPress={() => {
+                  const alum = selectedAlumni;
+                  setSelectedAlumni(null);
+                  router.push({
+                    pathname: '/meetings' as Href,
+                    params: { alumniId: alum.user_id, alumniName: alum.full_name },
+                  } as Href);
+                }}
+              >
+                <Text style={styles.detailButtonText}>Request Meeting</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.detailButton, { flex: 1, alignItems: 'center', backgroundColor: Colors.info }]}
+                onPress={() => {
+                  const alum = selectedAlumni;
+                  setSelectedAlumni(null);
+                  router.push({
+                    pathname: '/messages' as Href,
+                    params: { recipientId: alum.user_id },
+                  } as Href);
+                }}
+              >
+                <Text style={styles.detailButtonText}>Message</Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={{ flexDirection: 'row', gap: Spacing.xs, marginBottom: Spacing.sm, flexWrap: 'wrap' }}>
               <TouchableOpacity

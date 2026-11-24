@@ -84,8 +84,8 @@ export function AlumniDashboard({
         onRespond={dashboard.handleRespondMentorRequest}
       />
 
-      <UpcomingMeetingsSection title="Upcoming Student Consultations" />
-      <UnreadMessagesSection />
+      <UpcomingMeetingsSection title="Upcoming Student Consultations" meetings={dashboard.meetings} />
+      <UnreadMessagesSection threads={dashboard.conversations} />
       <CareerOpportunitiesSection jobs={dashboard.jobs} />
       <NotificationsSection
         notifications={dashboard.notifications}
