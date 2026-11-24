@@ -71,18 +71,23 @@ from src.repositories import (
 
 
 def test_declarative_table_count_and_schema_parity():
-    """Verify that exactly 38 relational base tables are mapped in Base.metadata."""
-    assert len(Base.metadata.tables) == 38
+    """Verify that all 55 relational base tables (38 Phase 1-4 + 17 Phase 2 Enterprise) are mapped in Base.metadata."""
+    assert len(Base.metadata.tables) == 55
     expected_tables = {
-        "admin_audit_logs", "agent_actions", "agent_runs", "alumni_chapters",
+        "admin_audit_logs", "agent_actions", "agent_runs", "ai_provider_configs",
+        "ai_usage_ledger", "alumni_availability", "alumni_chapters",
         "alumni_locations", "alumni_profiles", "approval_requests", "audit_logs",
         "career_role_skills", "communities", "community_memberships", "consent_records",
-        "course_enrollments", "event_registrations", "events", "faculty_profiles",
+        "conversation_participants", "conversations", "course_enrollments",
+        "event_registrations", "events", "faculty_profiles", "idempotency_keys",
         "impact_programmes", "job_applications", "jobs", "learning_resources",
-        "mentor_profiles", "mentor_requests", "notifications", "project_members",
-        "projects", "recruiter_profiles", "roles", "skills", "startup_connection_requests",
-        "startups", "student_profiles", "student_skills", "user_preferences",
-        "user_roles", "user_skills", "users", "verification_requests", "volunteer_interests",
+        "meeting_participants", "meeting_requests", "meeting_rooms", "meeting_slots",
+        "meetings", "mentor_profiles", "mentor_requests", "message_attachments",
+        "messages", "notifications", "outbox_events", "project_members",
+        "projects", "push_device_tokens", "recruiter_profiles", "roles", "skills",
+        "startup_connection_requests", "startups", "student_profiles", "student_skills",
+        "user_blocks", "user_preferences", "user_reports", "user_roles", "user_skills",
+        "users", "verification_requests", "volunteer_interests",
     }
     assert set(Base.metadata.tables.keys()) == expected_tables
 

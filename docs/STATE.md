@@ -1,58 +1,66 @@
 # MSGI ONE — MASTER ENTERPRISE ENGINEERING STATE TRACKER
 ## Production Re-Architecture & Textbook-Governed Execution Program
 
-**Document Version:** 1.0.0  
-**Current Phase:** Phase 0 — Forensic Codebase Audit (COMPLETE)  
-**Next Phase Target:** Phase 1 — Requirements & System Architecture  
+**Document Version:** 2.0.0  
+**Current Completed Checkpoint:** **Checkpoint A (Phases 1–4 COMPLETE)**  
+**Next Checkpoint Target:** **Checkpoint B (Phases 5–7: Scheduling Engine, WebSocket Messaging, LiveKit Audio/Video)**  
 **Author:** Unified Executive Engineering Leadership  
 **Date:** November 24, 2026  
-**Governing Standard:** Executive Engineering Directive v2.0  
-**Git HEAD Baseline:** `0b2e8ebd13a2b3ad40b108a57a0e067788d2eeb4`  
-**Current Working Branch:** `deploy/staging-hosted`  
-**Frozen Android Artifact ID:** `a95a7169-d48b-4730-bcfd-921500e4b8fae`  
-**Verified Test Baseline:** **184 Passed / 0 Failed in 43.89s `[V-EXEC]`**  
-**Mobile Client Typecheck:** **0 Errors (`tsc --noEmit`) `[V-EXEC]`**  
+**Governing Standard:** Executive Master Engineering Directive V3.0  
+**Git Baseline:** `0b2e8eb` (Branch: `feat/v2-student-alumni-ecosystem`, checkpoint `aa85fea`)  
+**Frozen Android Artifact ID:** `a95a7169-d48b-4730-bcfd-921500e4b8fae` (Compatibility Preserved)  
+**Verified Backend Test Suite:** **194 Passed / 0 Failed in 93.26s** (`VERIFIED_EXECUTION`)  
+**Mobile Client Typecheck:** **0 Errors (`tsc --noEmit`)** (`VERIFIED_EXECUTION`)  
+**Mobile Expo Doctor:** **18/18 checks passed** (`VERIFIED_EXECUTION`)  
+**Mobile Android Export:** **975 modules bundled (`3.25 MB` HBC)** (`VERIFIED_EXECUTION`)  
 
 ---
 
 ## 1. MASTER PHASE EXECUTION STATUS
 
-| Phase | Phase Title | Governing Textbooks | Status | Evidence Document |
+| Phase | Phase Title | Governing Textbooks | Status | Evidence / Deliverables |
 | :---: | :--- | :--- | :---: | :--- |
-| **0** | **Forensic Codebase Audit** | Sommerville; Pressman & Maxim; Martin (*Clean Architecture*) | **COMPLETE** `[V-EXEC]` | `docs/architecture/PHASE_0_FORENSIC_AUDIT_REPORT.md` |
-| **1** | **Requirements & System Architecture** | Sommerville; Pressman & Maxim; Martin | **PENDING AUTHORIZATION** | Target: `docs/architecture/SRS_FORMAL_SPECIFICATION.md` |
-| **2** | **Database & Backend Foundation** | Elmasri & Navathe; Kleppmann | **NOT STARTED** | Target: Schema migrations & repository extensions |
-| **3** | **Identity, RBAC & Security** | Sommerville; Pressman & Maxim; Martin | **NOT STARTED** | Target: Unified authentication & authorization |
-| **4** | **Student & Alumni Portals** | Pressman & Maxim; Martin | **NOT STARTED** | Target: Role-specific portal views & navigation |
-| **5** | **Mentorship & Meeting Scheduling** | Elmasri & Navathe; Kleppmann | **NOT STARTED** | Target: Multi-slot proposal & conflict-free scheduling engine |
-| **6** | **Real-Time 1-on-1 Messaging** | Kurose & Ross; Kleppmann | **NOT STARTED** | Target: WebSocket router, presence & message persistence |
-| **7** | **Audio/Video Meetings & Screen Share** | Kurose & Ross; *WebRTC for the Curious* | **NOT STARTED** | Target: LiveKit SFU integration & room tokens |
-| **8** | **Agentic AI & External Provider Key Vault** | Chip Huyen; Kleppmann; Martin | **NOT STARTED** | Target: Encrypted provider vault & SSE token streaming |
-| **9** | **Mobile Modernization & Offline Support** | Pressman & Maxim; Kleppmann | **NOT STARTED** | Target: TanStack Query, FlashList, Biometrics, Push |
-| **10** | **Testing, QA & Concurrency Benchmarks** | Sommerville; Pressman & Maxim | **NOT STARTED** | Target: Automated testing suite (>250 tests) |
-| **11** | **DevOps & Production Deployment** | Sommerville; Kleppmann; Silberschatz et al. | **NOT STARTED** | Target: Docker, CI/CD, EAS production builds |
-| **12** | **Continuous Evolution & Operations** | Sommerville; Pressman & Maxim | **NOT STARTED** | Target: Telemetry, SLA tracking, operational runbooks |
+| **0** | **Forensic Codebase Audit** | Sommerville; Pressman & Maxim; Martin | **COMPLETE** `[VERIFIED_EXECUTION]` | `docs/architecture/PHASE_0_FORENSIC_AUDIT_REPORT.md` (184 baseline re-verified in 42.85s) |
+| **1** | **Requirements & System Architecture** | Sommerville; Pressman & Maxim; Martin; Russell & Norvig | **COMPLETE** `[VERIFIED_INSPECTION]` | `SRS_FORMAL_SPECIFICATION.md`, `SYSTEM_ARCHITECTURE_V2.md`, `API_CONTRACT_V2.md`, `THREAT_MODEL.md`, `TEXTBOOK_TRACEABILITY_MATRIX.md`, `REQUIREMENTS_TRACEABILITY_MATRIX.md`, `AGENTIC_AI_ARCHITECTURE.md`, `PHASE_DEPENDENCY_GRAPH.md`, `INTEGRATION_CONTRACTS.md`, `docs/architecture/adr/ADR-001..005` |
+| **2** | **Database & Backend Foundation** | Elmasri & Navathe; Kleppmann; Martin; Silberschatz et al. | **COMPLETE** `[VERIFIED_EXECUTION]` | 17 new tables in `supabase/migrations/20261125000001_enterprise_ecosystem.sql` (local), `src/db/models/enterprise.py` (55 total ORM models), `src/repositories/enterprise_repositories.py`, `src/db/session.py` pooling, `test_enterprise_schema.py` |
+| **3** | **Identity, RBAC & Security** | Sommerville; Pressman & Maxim; Martin; Elmasri & Navathe | **COMPLETE** `[VERIFIED_EXECUTION]` | Fixed RS256/ES256 `verify_signature=False` fallback in `src/core/security.py`, session revocation (`/auth/logout`), `PermissionChecker` (`src/core/permissions.py`), WS token auth, log redaction, rate limiter, `routers/verifications.py`, local `20261125000002_runtime_rls_role.sql`, `test_phase3_security.py` |
+| **4** | **Student, Alumni & Admin Portals** | Pressman & Maxim; Sommerville; Martin | **COMPLETE** `[VERIFIED_EXECUTION]` | Decomposed 1,446-line `apps/mobile/src/app/(tabs)/index.tsx` into `StudentDashboard`, `AlumniDashboard`, `AdminDashboard` + 9 domain components + `useDashboardData`; enhanced `network.tsx` & `profile.tsx`; expanded `admin` & `alumni` & `mentor` backend portals; `test_phase4_portals.py` |
+| **5** | **Mentorship & Meeting Scheduling** | Elmasri & Navathe; Kleppmann; Silberschatz et al.; Sommerville | **NEXT (Checkpoint B)** | Schema & repo ready; service, router & mobile calendar UI in Checkpoint B |
+| **6** | **Real-Time 1-on-1 Messaging** | Kurose & Ross; Kleppmann; Elmasri & Navathe; Martin | **PENDING (Checkpoint B)** | Schema & repo ready; `/ws/chat`, Redis Pub/Sub & mobile chat UI in Checkpoint B |
+| **7** | **Audio/Video Meetings & Screen Share** | Kurose & Ross; *WebRTC for the Curious*; Silberschatz et al. | **PENDING (Checkpoint B)** | Schema & repo ready; LiveKit SFU & Expo SDK 52 compatibility integration in Checkpoint B |
+| **8** | **Agentic AI & External Provider Key Vault** | Chip Huyen; Russell & Norvig; Kleppmann; Martin | **PENDING (Checkpoint C)** | Vault & ledger schema ready; AES-256-GCM service, multi-provider adapters, SSE `/ai/chat/stream` in Checkpoint C |
+| **9** | **Mobile Modernization & Offline Sync** | Pressman & Maxim; Martin; Kleppmann; Silberschatz et al. | **PENDING (Checkpoint C)** | TanStack Query, FlashList, biometrics, push notifications, offline queue in Checkpoint C |
+| **10** | **Testing, QA & Concurrency Benchmarks** | Sommerville; Pressman & Maxim; Elmasri & Navathe; Chip Huyen | **PENDING (Checkpoint C)** | Integrated E2E scenarios A–D, negative suite, latency/FPS benchmarks in Checkpoint C |
+| **11** | **DevOps & Production Deployment** | Sommerville; Kleppmann; Silberschatz et al.; Pressman & Maxim | **PENDING (Checkpoint C)** | CI/CD, Docker, observability, EAS release readiness in Checkpoint C |
+| **12** | **Continuous Evolution & Governance** | Sommerville; Pressman & Maxim; Kleppmann; Chip Huyen | **PENDING (Checkpoint C)** | Runbooks, SLOs, AI governance & maintenance policy in Checkpoint C |
 
 ---
 
-## 2. VERIFIED ENGINEERING BASELINE
-
-- **Backend Architecture:** FastAPI 0.115.0, SQLAlchemy 2.0.36 Async, Pydantic v2, asyncpg, 13 REST routers, 38 declarative models, 10 async repositories, 11 domain services.
-- **AI Architecture:** LangGraph 0.2.50 StateGraph (Supervisor + Alumni, Career, Learning, Mentorship, Events domain agents + Synthesizer), PostgreSQL checkpointer schema, 1536-dimensional L2-normalized pgvector embeddings, Rule 15 HITL interruption engine, prompt injection defenses, PII masking, token accounting ($0.30 in, $2.50 out).
-- **Mobile Architecture:** Expo SDK 52, React Native 0.76.5, Expo Router v4, TypeScript 5.3 strict (`tsc --noEmit` 0 errors).
-- **Database Architecture:** Supabase PostgreSQL 17 + pgvector 0.8.2, 43 tables (38 application domain + 5 checkpoint tables) across 6 migrations.
-- **Automated Verification:** 184 passing pytest tests in 43.89s, 0 failures, 0 regressions.
-- **Compatibility Boundaries:** Dual-prefix middleware (`/api/v1` and `/api/v1/api/v1`) guaranteeing 100% backward compatibility for frozen Android artifact `a95a7169-d48b-4730-bcfd-921500e4b8fae`.
+## 2. MIGRATION & DATABASE STATUS (GOVERNANCE BOUNDARY)
+- **Remote Hosted Supabase:** Preserved untouched at the 6 applied Phase 0 migrations (43 tables). Per Executive Law 13 and Directive Section B, remote DDL migrations have NOT been executed without explicit owner authorization.
+- **Local Migrations Prepared & Verified:**
+  - `supabase/migrations/20261125000001_enterprise_ecosystem.sql` (17 enterprise tables + `btree_gist` exclusion constraints + RLS policies)
+  - `supabase/migrations/20261125000002_runtime_rls_role.sql` (least-privilege `msgi_api_runtime` role without `BYPASSRLS`)
+  - `supabase/rollbacks/20261125000001_enterprise_ecosystem_rollback.sql` (rollback reference stored outside `supabase/migrations/`)
+  - Unapplied `20261121000002_user_skills_rls_patch.sql`: `PermissionChecker.is_user_skills_retrieval_enabled()` remains `False` until remote verification.
 
 ---
 
-## 3. OPEN DEFICIENCIES & REMEDIATION PLAN (FROM PHASE 0 AUDIT)
+## 3. CHECKPOINT A MODIFIED & CREATED FILES
+- **Architecture & Testing Docs:** `docs/architecture/*.md`, `docs/architecture/adr/ADR-001..005.md`, `docs/testing/VERIFICATION_EVIDENCE.md`
+- **Backend Core & Security:** `services/api/src/core/config.py`, `security.py`, `permissions.py`, `dependencies.py`
+- **Backend DB & Repositories:** `services/api/src/db/session.py`, `services/api/src/db/models/enterprise.py`, `services/api/src/db/models/__init__.py`, `services/api/src/repositories/enterprise_repositories.py`, `services/api/src/repositories/__init__.py`
+- **Backend Routers & Services:** `services/api/src/main.py`, `routers/auth.py`, `routers/verifications.py`, `routers/admin.py`, `routers/alumni.py`, `services/admin_service.py`, `services/alumni_service.py`, `services/mentor_service.py`, `schemas/business.py`
+- **Backend Tests:** `services/api/tests/test_postgres_integration.py`, `test_enterprise_schema.py`, `test_phase3_security.py`, `test_phase4_portals.py`
+- **Mobile App:** `apps/mobile/src/types/business.ts`, `lib/api.ts`, `context/AuthContext.tsx`, `hooks/useDashboardData.ts`, `components/common/StateViews.tsx`, `components/dashboard/*.tsx`, `app/(tabs)/index.tsx`, `app/(tabs)/network.tsx`, `app/(tabs)/profile.tsx`
 
-1. **Mobile Monolith Decomposition:** Decompose 1,446-line `apps/mobile/src/app/(tabs)/index.tsx` into modular domain components (Phase 4 & Phase 9).
-2. **Client-Side Server Caching:** Introduce `@tanstack/react-query` to eliminate redundant fetches and provide offline cache hydration (Phase 9).
-3. **List Virtualization:** Migrate unvirtualized `<ScrollView>` components in directory, jobs, and dashboard to `@shopify/flash-list` (Phase 9).
-4. **Biometric & Push Features:** Add `expo-local-authentication` and `expo-notifications` (Phase 9).
-5. **Real-Time WebSocket Messaging:** Implement FastAPI WebSocket router `/ws/chat` for 1-on-1 messaging, presence, receipts (Phase 6).
-6. **Discord-Like Audio/Video Calling:** Implement LiveKit SFU integration, room token generation, and mobile WebRTC interface with screen sharing (Phase 7).
-7. **Scheduling Engine:** Implement meeting request state machine (`PENDING -> ACCEPTED/DECLINED/COUNTER_PROPOSED -> SCHEDULED`), multi-slot proposal engine, and double-booking conflict prevention (Phase 5).
-8. **External AI Provider Key Management:** Implement database-backed encrypted secret vault (`ai_provider_configs`) supporting Gemini, OpenAI, Claude, and DeepSeek with SSE token streaming (Phase 8).
+---
+
+## 4. KNOWN BLOCKERS & RESUME INSTRUCTIONS FOR CHECKPOINT B
+- **Blocked / External Prerequisites:**
+  1. Remote Supabase DDL execution for `20261121000002`, `20261125000001`, and `20261125000002` awaits explicit owner authorization.
+  2. Live Redis & LiveKit SFU server credentials (`REDIS_URL`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`) are not yet provisioned in `.env`; Phase 6–7 will implement full services/routers + local/in-memory adapters + mocked/unit/WS tests and check `expo-doctor` / `expo export` compatibility when installing mobile packages via `npx expo install`.
+- **Resume Instruction:** Upon user `continue`, proceed immediately with **Checkpoint B (Phases 5–7)**:
+  1. Phase 5: Implement `scheduling_service.py`, `routers/scheduling.py`, `.ics` export, concurrency & timezone tests, and mobile meeting request/calendar UI.
+  2. Phase 6: Implement `messaging_service.py`, Redis Pub/Sub adapter, FastAPI `/ws/chat` router, `routers/messaging.py`, cursor recovery, attachment validation, safety block/report, and mobile chat screens.
+  3. Phase 7: Evaluate `@livekit/react-native` & `livekit-api` compatibility with Expo SDK 52, implement `room_service.py`, `routers/rooms.py`, webhook verification, and mobile A/V meeting UI.

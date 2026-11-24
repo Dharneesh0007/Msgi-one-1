@@ -93,7 +93,7 @@ export interface MentorRequest {
   topic: string;
   career_goal: string;
   message?: string | null;
-  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
+  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled' | 'clarification_requested';
   mentor_notes?: string | null;
   created_at: string;
   updated_at: string;
@@ -220,4 +220,59 @@ export interface NotificationRecord {
   created_at: string;
   read_at?: string | null;
 }
+
+export interface AnnouncementItem {
+  id: string;
+  title: string;
+  body: string;
+  audience_role: string;
+  created_by: string;
+  created_at: string;
+}
+
+export interface AdminSummary {
+  total_users: number;
+  pending_verifications_count: number;
+  active_alumni_count: number;
+  active_jobs_count: number;
+  active_mentors_count: number;
+}
+
+export interface AdminUserRoleRecord {
+  user_id: string;
+  email: string;
+  full_name: string;
+  roles: string[];
+  is_verified: boolean;
+}
+
+export interface ModerationReportItem {
+  id: string;
+  reporter_id: string;
+  reported_user_id: string;
+  category: string;
+  description: string;
+  status: 'pending' | 'under_review' | 'resolved' | 'dismissed';
+  reviewed_by?: string | null;
+  resolution_notes?: string | null;
+  created_at: string;
+  resolved_at?: string | null;
+}
+
+export interface OperationalStatus {
+  api_status: string;
+  user_skills_rls_enabled: boolean;
+  pending_verifications: number;
+  open_reports: number;
+  audit_log_entries: number;
+  timestamp: string;
+}
+
+export interface VerificationStatusResponse {
+  overall_status: 'approved' | 'pending' | 'rejected' | 'unverified';
+  is_verified: boolean;
+  roles: string[];
+  requests: VerificationRequestItem[];
+}
+
 

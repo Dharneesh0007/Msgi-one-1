@@ -1,6 +1,6 @@
 """
 MSGI One — Declarative SQLAlchemy 2.0 Unified Models Registry
-Exports all 38 application models spanning Phases 1 through 4.
+Exports all 55 application models spanning Phases 1 through 4 + Phase 2 Enterprise Ecosystem.
 Guarantees clean metadata registration for migrations, reflection, and repository queries.
 """
 
@@ -60,6 +60,27 @@ from src.db.models.extended import (
     Notification,
 )
 
+# V2 Phase 2: Enterprise Scheduling, Messaging, WebRTC Rooms, AI Vault, Push, Outbox, Idempotency (17 models)
+from src.db.models.enterprise import (
+    AlumniAvailability,
+    MeetingRequest,
+    MeetingSlot,
+    Meeting,
+    Conversation,
+    ConversationParticipant,
+    Message,
+    MessageAttachment,
+    UserBlock,
+    UserReport,
+    MeetingRoom,
+    MeetingParticipant,
+    AIProviderConfig,
+    AIUsageLedger,
+    PushDeviceToken,
+    OutboxEvent,
+    IdempotencyKey,
+)
+
 __all__ = [
     "Base",
     # Phase 1
@@ -104,4 +125,22 @@ __all__ = [
     "ImpactProgramme",
     "VolunteerInterest",
     "Notification",
+    # Enterprise V2 (17 models)
+    "AlumniAvailability",
+    "MeetingRequest",
+    "MeetingSlot",
+    "Meeting",
+    "Conversation",
+    "ConversationParticipant",
+    "Message",
+    "MessageAttachment",
+    "UserBlock",
+    "UserReport",
+    "MeetingRoom",
+    "MeetingParticipant",
+    "AIProviderConfig",
+    "AIUsageLedger",
+    "PushDeviceToken",
+    "OutboxEvent",
+    "IdempotencyKey",
 ]

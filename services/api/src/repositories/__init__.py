@@ -14,6 +14,15 @@ from src.repositories.learning_repository import LearningRepository
 from src.repositories.community_repository import CommunityRepository
 from src.repositories.admin_repository import AdminRepository
 from src.repositories.notifications_repository import NotificationsRepository
+from src.repositories.enterprise_repositories import (
+    SchedulingRepository,
+    MessagingRepository,
+    MediaRoomRepository,
+    AIProviderRepository,
+    PushDeviceRepository,
+    OutboxRepository,
+    IdempotencyRepository,
+)
 
 __all__ = [
     "BaseRepository",
@@ -26,4 +35,11 @@ __all__ = [
     "CommunityRepository",
     "AdminRepository",
     "NotificationsRepository",
+    "SchedulingRepository",
+    "MessagingRepository",
+    "MediaRoomRepository",
+    "AIProviderRepository",
+    "PushDeviceRepository",
+    "OutboxRepository",
+    "IdempotencyRepository",
 ]

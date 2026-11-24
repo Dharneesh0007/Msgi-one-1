@@ -303,21 +303,21 @@ def update_mentor_request_status(
     new_status = status_update.status
     current_status = req["status"]
 
-    # Student can only cancel their own pending request
+    # Student can cancel pending or clarification_requested requests
     if user.id == req["student_id"]:
         if new_status != "cancelled":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail={"code": "PERMISSION_DENIED", "message": "Students can only cancel their own mentorship requests."},
             )
-        if current_status != "pending":
+        if current_status not in ("pending", "clarification_requested"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={"code": "INVALID_TRANSITION", "message": f"Cannot cancel a request that is already '{current_status}'."},
             )
-    # Mentor can accept or reject
+    # Mentor can accept, reject, or request clarification
     elif user.id == req["mentor_user_id"]:
-        if current_status != "pending":
+        if current_status not in ("pending", "clarification_requested"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={"code": "INVALID_TRANSITION", "message": f"Request has already been marked '{current_status}'."},

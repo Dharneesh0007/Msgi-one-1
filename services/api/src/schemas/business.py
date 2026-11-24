@@ -132,7 +132,7 @@ class MentorRequestCreate(BaseModel):
 
 class MentorRequestStatusUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    status: str = Field(..., pattern="^(accepted|rejected|completed|cancelled)$")
+    status: str = Field(..., pattern="^(accepted|rejected|completed|cancelled|clarification_requested)$")
     mentor_notes: Optional[str] = Field(None, max_length=1000)
 
 

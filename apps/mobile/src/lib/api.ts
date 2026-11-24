@@ -130,6 +130,19 @@ export const api = {
   updateMyProfile: (data: UserUpdateRequest) => api.patch<UserProfileResponse>('/api/v1/users/me', data),
   completeOnboarding: (data: UserOnboardingRequest) => api.post<UserProfileResponse>('/api/v1/users/me/onboard', data),
   getPublicProfile: (userId: string) => api.get<PublicUserProfileResponse>(`/api/v1/users/${userId}`),
+  logoutSession: () => api.post<any>('/api/v1/auth/logout'),
+
+  // Institutional Verification
+  getMyVerificationStatus: () => api.get<any>('/api/v1/verifications/me'),
+  submitVerificationRequest: (payload: {
+    requested_role: 'alumni' | 'faculty' | 'recruiter';
+    graduation_year?: number;
+    degree?: string;
+    department?: string;
+    organization?: string;
+    diploma_url?: string;
+    notes?: string;
+  }) => api.post<any>('/api/v1/verifications/me', payload),
 
   // Module 1: Alumni Network
   searchAlumni: (params: Record<string, any> = {}) => {
@@ -141,6 +154,7 @@ export const api = {
     return api.get<any>(`/api/v1/alumni${qs ? `?${qs}` : ''}`);
   },
   getAlumniDetails: (alumniId: string) => api.get<any>(`/api/v1/alumni/${alumniId}`),
+  updateMyAlumniProfile: (payload: Record<string, any>) => api.patch<any>('/api/v1/alumni/me', payload),
 
   // Module 2: CareerBridge
   listJobs: (params: Record<string, any> = {}) => {
@@ -226,6 +240,16 @@ export const api = {
     api.post<any>(`/api/v1/admin/verifications/${requestId}/decision`, { decision, review_notes: reviewNotes }),
   getAdminSummary: () => api.get<any>('/api/v1/admin/summary'),
   getAdminAuditLogs: () => api.get<any[]>('/api/v1/admin/audit-logs'),
+  getAdminUsers: () => api.get<any[]>('/api/v1/admin/users'),
+  updateUserRoles: (userId: string, roles: string[], isVerified?: boolean) =>
+    api.post<any>(`/api/v1/admin/users/${userId}/roles`, { roles, is_verified: isVerified }),
+  getAdminReports: () => api.get<any[]>('/api/v1/admin/reports'),
+  decideAdminReport: (reportId: string, status: 'under_review' | 'resolved' | 'dismissed', resolutionNotes?: string) =>
+    api.patch<any>(`/api/v1/admin/reports/${reportId}`, { status, resolution_notes: resolutionNotes }),
+  getAnnouncements: () => api.get<any[]>('/api/v1/admin/announcements'),
+  createAnnouncement: (payload: { title: string; body: string; audience_role?: string }) =>
+    api.post<any>('/api/v1/admin/announcements', payload),
+  getAdminStatus: () => api.get<any>('/api/v1/admin/status'),
 
   // Realtime In-App Notifications (Phase 4)
   getNotifications: () => api.get<any[]>('/api/v1/notifications'),

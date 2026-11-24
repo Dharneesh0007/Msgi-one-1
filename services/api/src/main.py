@@ -28,6 +28,7 @@ from src.routers.communities import router as communities_router
 from src.routers.admin import router as admin_router
 from src.routers.notifications import router as notifications_router
 from src.routers.extended import router as extended_router
+from src.routers.verifications import router as verifications_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -192,6 +193,7 @@ for pfx in API_PREFIXES:
     app.include_router(admin_router, prefix=pfx, include_in_schema=is_primary)
     app.include_router(notifications_router, prefix=pfx, include_in_schema=is_primary)
     app.include_router(extended_router, prefix=pfx, include_in_schema=is_primary)
+    app.include_router(verifications_router, prefix=pfx, include_in_schema=is_primary)
 
 
 # Direct /me and convenience aliases for primary prefix (/api/v1) and double prefix (/api/v1/api/v1)

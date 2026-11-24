@@ -15,17 +15,23 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { api } from '../../lib/api';
 import { AlumniDirectoryItem } from '../../types/business';
 import { Colors, Typography, Spacing, BorderRadius } from '../../constants/theme';
 
 export default function NetworkScreen() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [batchFilter, setBatchFilter] = useState('');
+  const [mentorsOnly, setMentorsOnly] = useState(false);
+  const [savedIds, setSavedIds] = useState<string[]>([]);
   const [alumniList, setAlumniList] = useState<AlumniDirectoryItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [selectedAlumni, setSelectedAlumni] = useState<AlumniDirectoryItem | null>(null);
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
 
   const filterTags = ['All', 'Japan', 'India', 'United States', 'AI / ML', 'Cloud'];
 
@@ -36,6 +42,12 @@ export default function NetworkScreen() {
 
       if (searchQuery.trim()) {
         params.query = searchQuery.trim();
+      }
+      if (batchFilter.trim() && /^\d{4}$/.test(batchFilter.trim())) {
+        params.graduation_year = Number(batchFilter.trim());
+      }
+      if (mentorsOnly) {
+        params.mentor_opt_in = true;
       }
 
       if (selectedTag && selectedTag !== 'All') {
@@ -56,7 +68,7 @@ export default function NetworkScreen() {
       setIsLoading(false);
       setRefreshing(false);
     }
-  }, [searchQuery, selectedTag]);
+  }, [searchQuery, selectedTag, batchFilter, mentorsOnly]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -76,11 +88,31 @@ export default function NetworkScreen() {
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by name, company, skill or city..."
+          placeholder="Search by name, company, title, skill or city..."
           placeholderTextColor={Colors.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
+
+        <View style={{ flexDirection: 'row', gap: Spacing.xs, marginTop: Spacing.xs }}>
+          <TextInput
+            style={[styles.searchInput, { flex: 1 }]}
+            placeholder="Batch Year (e.g. 2021)"
+            placeholderTextColor={Colors.textMuted}
+            keyboardType="number-pad"
+            maxLength={4}
+            value={batchFilter}
+            onChangeText={setBatchFilter}
+          />
+          <TouchableOpacity
+            style={[styles.tagPill, mentorsOnly && styles.tagPillActive, { justifyContent: 'center' }]}
+            onPress={() => setMentorsOnly(!mentorsOnly)}
+          >
+            <Text style={[styles.tagText, mentorsOnly && styles.tagTextActive]}>
+              {mentorsOnly ? '✓ Mentors Only' : 'Mentors Only'}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tagsScroll}>
           {filterTags.map((tag) => (
@@ -213,9 +245,40 @@ export default function NetworkScreen() {
               </Text>
             </View>
 
+            {actionFeedback ? (
+              <Text style={{ fontSize: 12, color: Colors.primary, marginBottom: Spacing.sm }}>{actionFeedback}</Text>
+            ) : null}
+
+            <View style={{ flexDirection: 'row', gap: Spacing.xs, marginBottom: Spacing.sm, flexWrap: 'wrap' }}>
+              <TouchableOpacity
+                style={[styles.detailButton, { flex: 1, alignItems: 'center' }]}
+                onPress={() => {
+                  const isSaved = savedIds.includes(selectedAlumni.id);
+                  setSavedIds((prev) => (isSaved ? prev.filter((x) => x !== selectedAlumni.id) : [...prev, selectedAlumni.id]));
+                  setActionFeedback(isSaved ? 'Removed from saved profiles.' : 'Saved profile locally.');
+                }}
+              >
+                <Text style={styles.detailButtonText}>
+                  {savedIds.includes(selectedAlumni.id) ? '★ Saved' : '☆ Save Profile'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.detailButton, { flex: 1, alignItems: 'center', backgroundColor: Colors.accentDark }]}
+                onPress={() => {
+                  setSelectedAlumni(null);
+                  router.push('/(tabs)/ai');
+                }}
+              >
+                <Text style={styles.detailButtonText}>Ask AI Suitability</Text>
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
               style={styles.modalCloseButton}
-              onPress={() => setSelectedAlumni(null)}
+              onPress={() => {
+                setActionFeedback(null);
+                setSelectedAlumni(null);
+              }}
             >
               <Text style={styles.modalCloseButtonText}>Close Profile</Text>
             </TouchableOpacity>

@@ -3,7 +3,7 @@
  * Features: View profile, role badge, privacy compliance indicators, editable fields, and Sign Out.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,10 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
+import { VerificationStatusResponse } from '../../types/business';
 import { Colors, Typography, Spacing, BorderRadius } from '../../constants/theme';
 
 export default function ProfileScreen() {
@@ -26,6 +26,16 @@ export default function ProfileScreen() {
   const [lastName, setLastName] = useState(user?.last_name || '');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatusResponse | null>(null);
+  const [gradYear, setGradYear] = useState('2022');
+  const [degree, setDegree] = useState('B.Tech Computer Science');
+  const [department, setDepartment] = useState('Computer Science');
+  const [submittingVerify, setSubmittingVerify] = useState(false);
+
+  useEffect(() => {
+    api.getMyVerificationStatus().then(setVerificationStatus).catch(() => null);
+  }, []);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -42,6 +52,26 @@ export default function ProfileScreen() {
       setSaveMessage(err.message || 'Failed to update profile.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSubmitAlumniVerification = async () => {
+    setSubmittingVerify(true);
+    setSaveMessage(null);
+    try {
+      await api.submitVerificationRequest({
+        requested_role: 'alumni',
+        graduation_year: Number(gradYear),
+        degree: degree.trim(),
+        department: department.trim(),
+      });
+      const latest = await api.getMyVerificationStatus();
+      setVerificationStatus(latest);
+      setSaveMessage('Institutional alumni verification request submitted for admin review.');
+    } catch (err: any) {
+      setSaveMessage(err.message || 'Verification submission failed.');
+    } finally {
+      setSubmittingVerify(false);
     }
   };
 
@@ -162,6 +192,48 @@ export default function ProfileScreen() {
           coordinates are never exposed to public directory searches without your explicit consent.
         </Text>
       </View>
+
+      {/* Institutional Verification Section for Unverified / Alumni Candidates */}
+      {!user?.is_verified && primaryRole !== 'admin' && (
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Institutional Alumni Verification</Text>
+          <Text style={styles.fieldValueReadOnly}>
+            Current Status: {(verificationStatus?.overall_status || 'unverified').toUpperCase()}
+          </Text>
+          {verificationStatus?.overall_status !== 'pending' && (
+            <View style={{ marginTop: Spacing.sm }}>
+              <TextInput
+                style={[styles.input, { marginBottom: Spacing.xs }]}
+                value={gradYear}
+                onChangeText={setGradYear}
+                keyboardType="number-pad"
+                placeholder="Graduation Year (e.g. 2022)"
+              />
+              <TextInput
+                style={[styles.input, { marginBottom: Spacing.xs }]}
+                value={degree}
+                onChangeText={setDegree}
+                placeholder="Degree (e.g. B.Tech)"
+              />
+              <TextInput
+                style={[styles.input, { marginBottom: Spacing.sm }]}
+                value={department}
+                onChangeText={setDepartment}
+                placeholder="Department"
+              />
+              <TouchableOpacity
+                style={[styles.saveButton, submittingVerify && styles.buttonDisabled]}
+                onPress={handleSubmitAlumniVerification}
+                disabled={submittingVerify}
+              >
+                <Text style={styles.saveButtonText}>
+                  {submittingVerify ? 'Submitting...' : 'Request Alumni Verification'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Account Actions */}
       <View style={styles.actionsContainer}>

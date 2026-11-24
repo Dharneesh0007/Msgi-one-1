@@ -157,8 +157,11 @@ def search_alumni(
     department = (filters.get("department") or "").strip().lower()
     industry = (filters.get("industry") or "").strip().lower()
     country = (filters.get("country") or "").strip().lower()
+    company = (filters.get("company") or "").strip().lower()
+    title = (filters.get("title") or "").strip().lower()
     skill = (filters.get("skill") or "").strip().lower()
     graduation_year = filters.get("graduation_year")
+    mentor_opt_in = filters.get("mentor_opt_in")
     verified_only = filters.get("verified_only", True)
     page = max(1, int(filters.get("page", 1)))
     limit = min(50, max(1, int(filters.get("limit", 20))))
@@ -176,7 +179,7 @@ def search_alumni(
 
         # Free-text search
         if query:
-            searchable = f"{item['full_name']} {item.get('headline', '')} {item.get('current_company', '')} {' '.join(item.get('skills', []))}".lower()
+            searchable = f"{item['full_name']} {item.get('headline', '')} {item.get('current_company', '')} {item.get('current_title', '')} {' '.join(item.get('skills', []))}".lower()
             if query not in searchable:
                 continue
 
@@ -187,10 +190,19 @@ def search_alumni(
         if industry and industry not in item.get("industry", "").lower():
             continue
 
-        if country and country not in item.get("country", "").lower():
+        if country and country not in item.get("country", "").lower() and country not in (item.get("city") or "").lower():
+            continue
+
+        if company and company not in (item.get("current_company") or "").lower():
+            continue
+
+        if title and title not in (item.get("current_title") or "").lower():
             continue
 
         if graduation_year and int(graduation_year) != item.get("graduation_year"):
+            continue
+
+        if mentor_opt_in is True and not item.get("mentor_opt_in", False):
             continue
 
         if skill:
