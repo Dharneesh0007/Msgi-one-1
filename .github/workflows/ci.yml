@@ -21,12 +21,12 @@ jobs:
       - name: Install Python 3.12 & Dependencies
         run: |
           uv python install 3.12
-          uv sync --frozen --dev
+          uv sync --frozen --extra dev
       - name: Run Complete Backend Test Suite
         env:
           AI_PROVIDER: deterministic
           ENVIRONMENT: test
-        run: uv run pytest tests -q
+        run: uv run --no-sync pytest tests -q
 
   mobile-checks:
     name: Expo Mobile Typecheck & Export Check

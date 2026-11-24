@@ -73,11 +73,19 @@ def chat_with_command_centre(
         total_tokens=state.get("total_tokens", 0),
     )
 
+    provider_used = state.get("provider_used") or "deterministic"
+    exec_mode = "live_vault_provider" if provider_used != "deterministic" else "sandboxed_deterministic"
+
     return StandardEnvelope[AIChatResponse](
         status="success",
         data=data,
         timestamp=datetime.now(timezone.utc),
-        meta={"execution_mode": "sandboxed_deterministic", "engine": "LangGraph 1.2"},
+        meta={
+            "execution_mode": exec_mode,
+            "provider": provider_used,
+            "model_id": state.get("model_used"),
+            "engine": "LangGraph 1.2",
+        },
     )
 
 

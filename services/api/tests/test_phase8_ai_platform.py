@@ -392,3 +392,65 @@ def test_ai_rbac_and_prompt_injection_and_15_case_eval_suite():
     eval_summary = run_evaluation_suite()
     assert eval_summary["failed"] == 0, f"AI evaluation failures: {eval_summary}"
     assert eval_summary["passed"] >= 15
+
+
+def test_conversational_greetings_and_general_advice_invoke_vault_llm_not_career_template(monkeypatch):
+    client = TestClient(app)
+    app.dependency_overrides[get_current_user] = lambda: STUDENT_USER
+
+    # 1. Offline mode (no vault provider configured): greeting still avoids hardcoded AI Engineer 19.2% template
+    offline_hi = client.post("/api/v1/ai/chat", json={"prompt": "Hii"})
+    assert offline_hi.status_code == 200
+    hi_data = offline_hi.json()["data"]
+    assert hi_data["intent"] == "conversational"
+    assert hi_data["skill_gap"] is None
+    assert "19.2%" not in hi_data["final_summary"]
+    assert "Career Analysis for AI Engineer" not in hi_data["final_summary"]
+
+    # General advice question routes to conversational too
+    advice_res = client.post(
+        "/api/v1/ai/chat",
+        json={"prompt": "What questions should I ask my alumni mentor in our first call?"},
+    )
+    assert advice_res.status_code == 200
+    assert advice_res.json()["data"]["intent"] == "conversational"
+    assert advice_res.json()["data"]["skill_gap"] is None
+
+    # 2. Active primary provider in encrypted vault is invoked with institutional context
+    upsert_provider_config(
+        provider="openai",
+        display_name="Primary Institutional OpenAI",
+        model_id="gpt-4o-mini",
+        api_key="sk-vault-primary-conv-test-1234",
+        configured_by=ADMIN_USER.id,
+        is_primary=True,
+    )
+    captured = {}
+
+    async def fake_execute_with_failover(*, prompt, system_instruction, user_id=None, run_id=None, **_kwargs):
+        captured["prompt"] = prompt
+        captured["system_instruction"] = system_instruction
+        from src.ai.multi_provider import ProviderCompletionResult
+        return ProviderCompletionResult(
+            provider="openai",
+            model_id="gpt-4o-mini",
+            content="Hi Neha! Welcome to MSGI One. Let me know how I can help connect you with alumni mentors.",
+            prompt_tokens=80,
+            output_tokens=22,
+            total_tokens=102,
+            estimated_cost_usd=0.000025,
+            latency_ms=42,
+        )
+
+    import src.ai.agents.conversational as conv_mod
+    monkeypatch.setattr(conv_mod, "execute_with_failover", fake_execute_with_failover)
+
+    live_hi = client.post("/api/v1/ai/chat", json={"prompt": "Hello"})
+    assert live_hi.status_code == 200
+    body = live_hi.json()
+    assert body["data"]["intent"] == "conversational"
+    assert body["data"]["skill_gap"] is None
+    assert "Welcome to MSGI One" in body["data"]["final_summary"]
+    assert body["meta"]["execution_mode"] == "live_vault_provider"
+    assert body["meta"]["provider"] == "openai"
+    assert "Kenji Sato" in captured["system_instruction"]

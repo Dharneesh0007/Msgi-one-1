@@ -371,7 +371,36 @@ class DeterministicAIProvider(BaseAIProvider):
         elif "cloud" in p_lower or "architect" in p_lower:
             target_role = "Cloud Solutions Architect"
 
-        # 4. Multi-agent Orchestrator Detection
+        # 4. Multi-agent Orchestrator vs Specific Domain vs Conversational Detection
+        stripped_greeting = re.sub(r"[^a-z\s]", "", p_lower).strip()
+        greeting_phrases = {
+            "hi", "hii", "hiii", "hi there", "hello", "hello there",
+            "hey", "heyy", "hey there", "yo", "greetings", "howdy",
+            "good morning", "good afternoon", "good evening",
+            "thanks", "thank you", "whats up", "sup",
+            "who are you", "what can you do", "help", "help me",
+        }
+        explicit_workflow_terms = [
+            "skill gap", "recommend", "find ", "search", "apply to",
+            "submit application", "register me", "register for",
+            "send mentorship", "send a mentorship", "learning roadmap",
+            "generate roadmap", "generate a learning roadmap",
+            "schedule", "meeting", "availability", "draft message",
+            "summarize conversation", "admin summary", "evaluate",
+        ]
+        conversational_advice_markers = [
+            "what questions", "how should i", "how do i", "tips for",
+            "general advice", "what is msgi", "tell me about",
+            "explain ", "advice on", "prepare for",
+        ]
+        has_explicit_workflow = any(kw in p_lower for kw in explicit_workflow_terms)
+        is_pure_greeting = stripped_greeting in greeting_phrases or (
+            len(stripped_greeting.split()) <= 3
+            and any(g == w for g in ("hi", "hii", "hiii", "hello", "hey", "heyy") for w in stripped_greeting.split())
+            and not has_explicit_workflow
+        )
+        is_general_advice = any(m in p_lower for m in conversational_advice_markers) and not has_explicit_workflow
+
         orchestrator_keywords = ["analyze my skill gap", "help me transition", "mentor and roadmap", "entry-level job"]
         matches = sum(1 for kw in orchestrator_keywords if kw in p_lower)
         if matches >= 2 or ("transition" in p_lower and "mentor" in p_lower):
@@ -389,6 +418,8 @@ class DeterministicAIProvider(BaseAIProvider):
                 intent = "messaging"
             else:
                 intent = "orchestrator"
+        elif is_pure_greeting or is_general_advice:
+            intent = "conversational"
         elif "admin" in p_lower and any(k in p_lower for k in ["summary", "audit", "verification", "moderation", "analytics"]):
             intent = "admin_ops"
         elif any(k in p_lower for k in ["draft message", "summarize conversation", "conversation summary"]):
@@ -404,7 +435,7 @@ class DeterministicAIProvider(BaseAIProvider):
         elif any(k in p_lower for k in ["event", "summit", "gala", "reunion", "workshop"]):
             intent = "events"
         else:
-            intent = "orchestrator"
+            intent = "conversational"
 
         # 5. Extract Locations & Topics
         country = None

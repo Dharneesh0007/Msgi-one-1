@@ -17,7 +17,7 @@ class CommandCentreState(TypedDict, total=False):
 
     # 2. User Query & Intent Classification
     prompt: str
-    intent: str  # 'alumni', 'career', 'mentorship', 'events', 'scheduling', 'messaging', 'admin_ops', 'orchestrator', 'rejected'
+    intent: str  # 'alumni', 'career', 'mentorship', 'events', 'scheduling', 'messaging', 'admin_ops', 'conversational', 'orchestrator', 'rejected'
     target_role: Optional[str]
     extracted_skills: List[str]
 
@@ -31,6 +31,10 @@ class CommandCentreState(TypedDict, total=False):
     recommended_slots: Optional[List[Dict[str, Any]]]
     drafted_message: Optional[Dict[str, Any]]
     admin_summary: Optional[Dict[str, Any]]
+    conversational_reply: Optional[str]
+    provider_used: Optional[str]
+    model_used: Optional[str]
+    estimated_cost_usd: Optional[float]
 
     # 4. Human-In-The-Loop Approval Gates (Rule 15)
     pending_approval: Optional[Dict[str, Any]]

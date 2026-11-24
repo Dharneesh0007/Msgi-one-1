@@ -127,15 +127,35 @@ async def test_postgres_rls_enforcement_under_restricted_role(pg_engine):
             WHERE schemaname = 'public' AND rowsecurity = true;
         """))
         rls_tables = {r[0] for r in sec_res.fetchall()}
-        assert len(rls_tables) == 35, f"Expected 35 domain tables with RLS, found {len(rls_tables)}"
+        assert len(rls_tables) >= 52, f"Expected at least 52 domain tables with RLS, found {len(rls_tables)}"
+        expected_enterprise_rls = {
+            "ai_provider_configs",
+            "ai_usage_ledger",
+            "alumni_availability",
+            "conversation_participants",
+            "conversations",
+            "idempotency_keys",
+            "meeting_participants",
+            "meeting_requests",
+            "meeting_rooms",
+            "meeting_slots",
+            "meetings",
+            "message_attachments",
+            "messages",
+            "outbox_events",
+            "push_device_tokens",
+            "user_blocks",
+            "user_reports",
+        }
+        assert expected_enterprise_rls.issubset(rls_tables)
 
-        # Verify reference lookup tables that intentionally do not require RLS
+        # Verify only allowlisted reference/deferred tables lack RLS
         unsec_res = await conn.execute(text("""
             SELECT tablename FROM pg_tables
             WHERE schemaname = 'public' AND rowsecurity = false;
         """))
         unsec_tables = {r[0] for r in unsec_res.fetchall()}
-        assert unsec_tables == {"roles", "skills", "user_skills"}
+        assert unsec_tables.issubset({"roles", "skills", "user_skills"})
 
 
 def test_unauthenticated_requests_rejected(client):

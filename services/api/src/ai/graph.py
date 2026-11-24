@@ -22,6 +22,7 @@ from src.ai.agents.events import events_agent_node
 from src.ai.agents.scheduling import scheduling_agent_node
 from src.ai.agents.messaging import messaging_agent_node
 from src.ai.agents.admin_ops import admin_ops_agent_node
+from src.ai.agents.conversational import conversational_agent_node
 from src.ai.checkpoint import thread_registry, get_sync_checkpointer
 from src.ai.provider import verify_source_citations
 from src.ai.rag import evaluate_grounding, INSUFFICIENT_EVIDENCE_REFUSAL
@@ -104,6 +105,13 @@ def synthesizer_node(state: CommandCentreState) -> CommandCentreState:
             f"{admin_sum.get('open_reports', 0)} open moderation reports."
         )
 
+    conv_reply = state.get("conversational_reply")
+    if conv_reply and not parts:
+        state["final_summary"] = conv_reply
+        state["validated_citations"] = verify_source_citations([], state.get("evidence", []))
+        state["status"] = "completed"
+        return state
+
     if not parts:
         state["final_summary"] = "Your request was processed successfully. No immediate matching records were found."
     else:
@@ -159,6 +167,8 @@ def route_supervisor(state: CommandCentreState) -> str:
         return "messaging_agent"
     if intent == "admin_ops":
         return "admin_ops_agent"
+    if intent == "conversational":
+        return "conversational_agent"
     return "career_agent"
 
 
@@ -174,6 +184,7 @@ def build_command_centre_graph(checkpointer: Optional[BaseCheckpointSaver] = Non
     builder.add_node("scheduling_agent", scheduling_agent_node)
     builder.add_node("messaging_agent", messaging_agent_node)
     builder.add_node("admin_ops_agent", admin_ops_agent_node)
+    builder.add_node("conversational_agent", conversational_agent_node)
     builder.add_node("synthesizer", synthesizer_node)
 
     builder.add_edge(START, "supervisor")
@@ -190,6 +201,7 @@ def build_command_centre_graph(checkpointer: Optional[BaseCheckpointSaver] = Non
             "scheduling_agent": "scheduling_agent",
             "messaging_agent": "messaging_agent",
             "admin_ops_agent": "admin_ops_agent",
+            "conversational_agent": "conversational_agent",
         },
     )
 
@@ -234,6 +246,7 @@ def build_command_centre_graph(checkpointer: Optional[BaseCheckpointSaver] = Non
     builder.add_edge("scheduling_agent", "synthesizer")
     builder.add_edge("messaging_agent", "synthesizer")
     builder.add_edge("admin_ops_agent", "synthesizer")
+    builder.add_edge("conversational_agent", "synthesizer")
     builder.add_edge("synthesizer", END)
 
     if checkpointer is None:
