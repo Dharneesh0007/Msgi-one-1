@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from src.core.dependencies import AuthenticatedUser
 from src.services.alumni_service import search_alumni
+from src.services.semantic_search_service import search_alumni_semantic_sync
 from src.services.mentor_service import search_mentors, create_mentor_request
 from src.services.jobs_service import search_jobs, submit_job_application
 from src.services.events_service import search_events, register_for_event, check_event_capacity
@@ -51,6 +52,28 @@ def search_alumni_network(
         filters["country"] = country
     filters["verified_only"] = True
     return search_alumni(filters=filters, authenticated_user=authenticated_user)
+
+
+# 1B. Semantic Alumni Vector Search Tool
+def search_alumni_semantic_tool(
+    query: str,
+    industry: Optional[str] = None,
+    country: Optional[str] = None,
+    department: Optional[str] = None,
+    limit: int = 10,
+    authenticated_user: Optional[AuthenticatedUser] = None,
+) -> Dict[str, Any]:
+    """Semantic vector search across alumni profiles using 1536-dim embeddings."""
+    return search_alumni_semantic_sync(
+        query_text=query,
+        authenticated_user=authenticated_user,
+        limit=limit,
+        department=department,
+        industry=industry,
+        country=country,
+        verified_only=True,
+    )
+
 
 
 # 2. Mentor Matching Tool

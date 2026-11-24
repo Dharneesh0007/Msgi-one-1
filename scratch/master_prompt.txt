@@ -1,0 +1,1071 @@
+<USER_REQUEST>
+# MSGI ONE — MASTER ENTERPRISE ENGINEERING, RE-ARCHITECTURE & PRODUCTION EXECUTION PROMPT
+
+## 1. PROJECT IDENTITY
+
+You are appointed as the Principal Software Architect, Enterprise Systems Engineer, Backend Architect, Mobile Engineering Lead, Database Architect, AI Systems Engineer, Cybersecurity Engineer and DevOps Engineer for MSGI One.
+
+Your responsibility is to transform MSGI One into a complete, production-grade, agentic AI-powered institutional student–alumni ecosystem.
+
+This is an existing project. You MUST inspect and understand the existing implementation before making modifications.
+
+Do not unnecessarily replace working architecture, delete features, rewrite the entire project or introduce technologies merely because they are popular.
+
+The final product must be reliable, secure, scalable, maintainable, accessible and commercially deployable.
+
+## 2. NON-NEGOTIABLE TEXTBOOK-GOVERNED ENGINEERING POLICY
+
+The entire engineering programme must follow established international engineering textbooks written by authors outside India.
+
+The textbooks below are the governing intellectual foundation of the project.
+
+### A. Software Engineering and Development Lifecycle
+
+Primary references:
+
+1. Ian Sommerville — Software Engineering, 10th Edition.
+2. Roger S. Pressman and Bruce R. Maxim — Software Engineering: A Practitioner's Approach, 9th Edition.
+
+Apply their principles to:
+- Requirements engineering.
+- Software process models.
+- System modelling.
+- Architectural design.
+- Component-level design.
+- Implementation.
+- Software testing.
+- Quality assurance.
+- Software evolution.
+- Project management.
+
+### B. Software Architecture and Design
+
+Primary reference:
+
+Robert C. Martin — Clean Architecture.
+
+Apply:
+- Separation of concerns.
+- Dependency inversion.
+- Layered boundaries.
+- Independent business rules.
+- Interface segregation.
+- Maintainable components.
+- Testable architecture.
+
+### C. Database Engineering
+
+Primary reference:
+
+Ramez Elmasri and Shamkant B. Navathe — Fundamentals of Database Systems, 7th Edition.
+
+Apply:
+- Conceptual modelling.
+- ER diagrams.
+- Relational modelling.
+- Functional dependencies.
+- Normalization.
+- Referential integrity.
+- Transactions.
+- Query optimization.
+- Indexing.
+
+### D. Distributed Systems and Data Architecture
+
+Primary reference:
+
+Martin Kleppmann and Chris Riccomini — Designing Data-Intensive Applications, 2nd Edition.
+
+Apply:
+- Distributed system design.
+- Replication.
+- Consistency.
+- Fault tolerance.
+- Data synchronization.
+- Event-driven architecture.
+- Distributed transactions where necessary.
+- Reliability and scalability.
+
+### E. Networking
+
+Primary reference:
+
+James F. Kurose and Keith W. Ross — Computer Networking: A Top-Down Approach.
+
+Apply:
+- HTTP/HTTPS.
+- TCP/IP.
+- DNS.
+- WebSocket communication.
+- Network latency.
+- Transport protocols.
+- Real-time communication.
+
+### F. Operating Systems and Concurrency
+
+Primary reference:
+
+Abraham Silberschatz, Peter B. Galvin and Greg Gagne — Operating System Concepts.
+
+Apply:
+- Concurrency.
+- Process management.
+- Threads.
+- Resource management.
+- Scheduling.
+- Deadlock prevention.
+- Asynchronous execution.
+
+### G. Real-Time Communication
+
+Primary reference:
+
+WebRTC for the Curious.
+
+Apply:
+- WebRTC signalling.
+- ICE.
+- STUN.
+- TURN.
+- SDP negotiation.
+- RTP/SRTP.
+- Audio/video transport.
+- Network adaptation.
+- Secure media communication.
+
+### H. Artificial Intelligence Engineering
+
+Primary reference:
+
+Chip Huyen — AI Engineering.
+
+Apply:
+- Model integration.
+- LLM application architecture.
+- Retrieval and grounding.
+- Evaluation.
+- Production deployment.
+- Model monitoring.
+- AI reliability.
+
+### TEXTBOOK COMPLIANCE RULES
+
+1. Every phase must identify the applicable textbook and relevant engineering concepts.
+2. Every architecture decision must include its textbook foundation.
+3. Explain why the chosen architecture is appropriate.
+4. Do not invent textbook chapters, quotations or page numbers.
+5. Do not use random internet tutorials as the primary architectural foundation.
+6. Use official framework documentation, RFCs, API documentation and recognized security standards to verify current implementation details.
+7. If a modern technology is not covered in a textbook, derive its design principles from the relevant textbook and validate its implementation against official technical documentation.
+8. Never violate sound engineering principles merely to follow a particular technology.
+9. Maintain a permanent architecture decision record (ADR) for major decisions.
+10. If a proposed design conflicts with the established architecture, document and resolve the conflict before implementation.
+
+## 3. EXISTING TECHNOLOGY FOUNDATION
+
+The existing project identifies the following technology foundation:
+
+- Mobile: React Native and Expo SDK 52.
+- Mobile language: TypeScript.
+- Backend: FastAPI.
+- Database: Supabase PostgreSQL 17.
+- ORM: SQLAlchemy Async.
+- AI orchestration: LangGraph.
+- AI integration: External LLM API providers.
+
+Verify all actual installed versions before making changes.
+
+Retain compatible existing technologies unless a documented technical justification requires a change.
+
+## 4. CORE PRODUCT OBJECTIVE
+
+MSGI One must provide three major user environments:
+
+1. Student ecosystem.
+2. Alumni ecosystem.
+3. Institutional administration ecosystem.
+
+All environments must communicate through a shared, secure backend.
+
+### STUDENT PORTAL
+
+Students must be able to:
+
+- Register and log in using student authentication.
+- View and update their student profiles.
+- Discover verified alumni.
+- Search alumni by name, graduation year, department, company, country, expertise and skills.
+- View publicly permitted alumni profiles.
+- Send mentorship requests.
+- Send meeting requests.
+- Explain the purpose of a meeting.
+- Suggest multiple preferred meeting slots.
+- View request status.
+- Communicate with alumni after appropriate acceptance or authorization.
+- Receive notifications.
+- Join scheduled video meetings.
+- Share their screen during authorized meetings.
+- Access career opportunities.
+- Apply for internships and jobs.
+- Participate in institutional events.
+- Access AI-powered career assistance.
+
+### ALUMNI PORTAL
+
+Alumni must have an independent login experience.
+
+Alumni must be able to:
+
+- Register and authenticate as alumni.
+- Complete their professional profiles.
+- Verify their alumni identity through institutional approval.
+- View student profiles according to privacy permissions.
+- Discover students seeking mentorship.
+- Receive mentorship requests.
+- View meeting requests.
+- Accept or decline requests.
+- Propose alternative meeting times.
+- Manage their availability.
+- View upcoming meetings.
+- Communicate with students.
+- Start scheduled voice/video meetings.
+- Share their screen.
+- Manage meeting participants.
+- Receive notifications.
+- Publish career opportunities.
+- Participate in institutional communities.
+
+### ADMINISTRATOR PORTAL
+
+Administrators must be able to:
+
+- Manage student accounts.
+- Verify alumni accounts.
+- Manage user roles.
+- Manage departments and graduation batches.
+- Review reported content.
+- Moderate interactions.
+- Manage institutional announcements.
+- Manage events.
+- Monitor meeting abuse reports.
+- View system audit logs.
+- Manage AI provider configuration and usage limits.
+- Access operational analytics.
+
+Implement role-based authorization. Never trust a role supplied by the mobile client.
+
+## 5. STUDENT–ALUMNI REQUEST AND MEETING SYSTEM
+
+Develop a complete meeting-request lifecycle.
+
+### Request lifecycle
+
+PENDING → ACCEPTED / DECLINED / COUNTER_PROPOSED → SCHEDULED → IN_PROGRESS → COMPLETED.
+
+Also support:
+- CANCELLED.
+- EXPIRED.
+- RESCHEDULED.
+- NO_SHOW.
+
+### Student request
+
+The student must provide:
+
+- Target alumnus.
+- Meeting purpose.
+- Description.
+- Preferred date.
+- Preferred time slots.
+- Expected duration.
+- Optional meeting type.
+
+### Alumni response
+
+The alumnus must be able to:
+
+- Accept a proposed slot.
+- Decline with an optional reason.
+- Propose an alternative slot.
+- Confirm the final meeting.
+
+### Scheduling engine
+
+Implement:
+- Time-zone-aware scheduling.
+- Availability management.
+- Conflict detection.
+- Double-booking prevention.
+- Meeting expiration.
+- Calendar integration.
+- Notifications and reminders.
+- Rescheduling history.
+- Cancellation policies.
+
+Store timestamps consistently in UTC and display them in the relevant user's local time zone.
+
+Use database transactions and appropriate concurrency protection when confirming bookings.
+
+## 6. REAL-TIME MESSAGING SYSTEM
+
+Develop a secure student–alumni communication system.
+
+Required capabilities:
+
+- One-to-one conversations.
+- Message history.
+- Text messaging.
+- Message timestamps.
+- Read receipts.
+- Delivery status.
+- Typing indicators.
+- Online/offline presence.
+- Image and document attachments with security validation.
+- Conversation notifications.
+- Blocking and reporting.
+- Pagination.
+- Message retention policies.
+
+Use WebSocket or an appropriate real-time communication service.
+
+Establish authorization at the conversation and message level.
+
+A user must never access another user's private conversations by manipulating an API request.
+
+## 7. DISCORD-LIKE AUDIO AND VIDEO MEETING SYSTEM
+
+This is a major product requirement.
+
+MSGI One must include an integrated meeting experience.
+
+### Meeting interface
+
+Provide:
+
+- Microphone on/off.
+- Camera on/off.
+- Screen sharing.
+- Participant grid.
+- Active speaker view.
+- In-meeting chat.
+- Participant list.
+- Raise hand.
+- Meeting join/leave notifications.
+- Host controls.
+- Waiting room.
+- Participant removal.
+- Network quality indicator.
+- Reconnection handling.
+- Meeting termination.
+
+### Technical architecture
+
+Evaluate WebRTC with an SFU-based media architecture.
+
+Evaluate:
+- LiveKit.
+- mediasoup.
+
+Select the appropriate solution based on scalability, maintenance, cost, security and integration complexity.
+
+Implement:
+- Secure signalling.
+- ICE candidate exchange.
+- STUN/TURN connectivity.
+- Encrypted media transport.
+- Short-lived meeting access tokens.
+- Authorized participant admission.
+- Screen-sharing permissions.
+- Network recovery.
+- Adaptive media quality.
+- Meeting room lifecycle management.
+
+Do not implement group video calling using an unbounded peer-to-peer mesh.
+
+Use a meeting-provider abstraction where practical so that the application is not permanently coupled to one vendor.
+
+### Privacy
+
+- Do not expose permanent room credentials.
+- Do not allow unauthorized room access.
+- Do not record meetings by default.
+- Obtain explicit consent before recording.
+- Provide reporting and moderation controls.
+- Define retention and deletion policies.
+
+## 8. AGENTIC AI ARCHITECTURE
+
+MSGI One is an agentic AI application, not merely a chatbot.
+
+Retain and evaluate the existing LangGraph architecture.
+
+Design a modular multi-agent ecosystem.
+
+### Proposed AI agents
+
+1. Student Career Agent.
+2. Alumni Discovery Agent.
+3. Mentor Matching Agent.
+4. Meeting Assistance Agent.
+5. Job Recommendation Agent.
+6. Learning Roadmap Agent.
+7. Institutional Information Agent.
+8. Event Recommendation Agent.
+9. Administrative Assistance Agent.
+
+### Agent capabilities
+
+The AI system should:
+
+- Understand natural-language requests.
+- Retrieve authorized institutional information.
+- Search relevant alumni profiles.
+- Recommend mentors based on student objectives.
+- Recommend career opportunities.
+- Assist with meeting preparation.
+- Generate career-development roadmaps.
+- Summarize authorized conversations where permitted.
+- Assist with institutional queries.
+- Produce grounded responses with citations when sources are available.
+
+### Agentic workflow
+
+Implement:
+
+- Intent classification.
+- Agent routing.
+- Tool execution.
+- Shared state management.
+- Memory policies.
+- Context management.
+- Structured output validation.
+- Human approval for sensitive actions.
+- Error recovery.
+- Agent execution tracing.
+- Evaluation and regression testing.
+
+Do not allow agents to bypass backend authorization.
+
+AI-generated recommendations must never reveal private alumni or student information without permission.
+
+An AI agent may recommend a meeting slot, but must not confirm a booking without the required user's authorization.
+
+## 9. EXTERNAL AI API KEY MANAGEMENT
+
+I explicitly want external AI model APIs to power MSGI One.
+
+Design a provider-independent AI integration architecture.
+
+Evaluate providers such as:
+
+- OpenAI.
+- Anthropic.
+- Google Gemini.
+- Other compatible providers when justified.
+
+Requirements:
+
+1. API keys must remain on the backend.
+2. Never embed API keys inside the React Native application.
+3. Never expose keys through frontend environment variables or public configuration.
+4. Use environment secrets or an appropriate secrets manager.
+5. Support secure key rotation.
+6. Prevent keys from appearing in logs.
+7. Support provider-specific model configuration.
+8. Implement usage tracking.
+9. Implement token and cost monitoring.
+10. Implement rate limits and budgets.
+11. Support provider timeouts.
+12. Support controlled retries and fallback providers.
+13. Handle provider outages.
+14. Maintain audit records of AI operations.
+15. Provide administrator-controlled provider configuration.
+
+Build an abstraction such as:
+
+AIProvider → ModelAdapter → AgentOrchestrator → Tools → ValidatedResponse.
+
+Do not couple every agent directly to a single provider's SDK.
+
+If user-supplied API keys are ever supported, isolate them per account, encrypt them appropriately and establish explicit consent and usage controls.
+
+## 10. SECURITY ARCHITECTURE
+
+Security must be established before public deployment.
+
+Implement:
+
+- Role-Based Access Control.
+- Row-Level Security.
+- Secure authentication.
+- Token refresh and revocation.
+- Password hashing.
+- Secure session management.
+- API rate limiting.
+- Input validation.
+- SQL injection prevention.
+- IDOR protection.
+- CSRF protection where applicable.
+- Secure file uploads.
+- API authorization.
+- Secret management.
+- Audit logging.
+- Encryption in transit.
+- Appropriate encryption at rest.
+- Backup and recovery.
+- Abuse detection.
+
+Use OWASP ASVS and relevant OWASP API Security guidance as additional verification standards.
+
+Perform security testing before declaring production readiness.
+
+## 11. DATABASE ARCHITECTURE
+
+Inspect the existing database before designing migrations.
+
+Create or update an ER diagram.
+
+Evaluate entities such as:
+
+- Users.
+- StudentProfiles.
+- AlumniProfiles.
+- Departments.
+- GraduationBatches.
+- Roles.
+- MentorRequests.
+- MeetingRequests.
+- MeetingAvailability.
+- Meetings.
+- MeetingParticipants.
+- Conversations.
+- ConversationMembers.
+- Messages.
+- Attachments.
+- Notifications.
+- PushTokens.
+- JobOpportunities.
+- JobApplications.
+- Events.
+- EventRegistrations.
+- AIConversations.
+- AIAgentExecutions.
+- AIUsageRecords.
+- AuditLogs.
+- Reports.
+
+Do not blindly create duplicate tables if equivalent structures already exist.
+
+Apply normalization, foreign keys, constraints, indexes, transaction boundaries and appropriate retention policies.
+
+Evaluate pgvector indexing for semantic alumni discovery only after measuring actual workload and selecting appropriate index parameters.
+
+## 12. MOBILE ARCHITECTURE
+
+Modernize the React Native application.
+
+Implement:
+
+- Modular screens.
+- Reusable UI components.
+- Centralized API client.
+- TanStack Query.
+- Appropriate client-side state management.
+- FlashList for large directories.
+- Expo Image.
+- Skeleton loading.
+- Error boundaries.
+- Haptic feedback.
+- Accessible components.
+- Responsive layouts.
+- Deep linking.
+- Secure storage.
+- Offline-aware data management.
+
+Create independent modules for:
+
+- Authentication.
+- Student Dashboard.
+- Alumni Dashboard.
+- Alumni Directory.
+- Student Directory.
+- Mentorship.
+- Meeting Requests.
+- Messaging.
+- Video Meetings.
+- Opportunities.
+- Events.
+- AI Assistant.
+- Notifications.
+- Administration.
+
+Avoid monolithic screens and duplicated business logic.
+
+## 13. OFFLINE AND SYNCHRONIZATION ARCHITECTURE
+
+Implement offline support where appropriate.
+
+Provide:
+- Local persistence.
+- Cached profile information.
+- Cached essential content.
+- Mutation queues.
+- Retry policies.
+- Idempotency.
+- Conflict resolution.
+- Background synchronization.
+- Sync status indicators.
+
+Do not imply that live video meetings or real-time messaging can operate without connectivity.
+
+## 14. OBSERVABILITY AND PERFORMANCE
+
+Implement:
+
+- Sentry crash reporting.
+- Structured backend logs.
+- OpenTelemetry tracing.
+- API latency monitoring.
+- Database performance monitoring.
+- AI latency monitoring.
+- Token and cost metrics.
+- Mobile startup metrics.
+- Network error monitoring.
+- Real-time connection monitoring.
+
+Establish measurable performance objectives.
+
+Load-test:
+- Authentication.
+- Alumni search.
+- Meeting requests.
+- Message delivery.
+- Meeting token generation.
+- AI agent execution.
+
+Never invent performance improvements. Measure before and after.
+
+## 15. COMPLETE ENGINEERING EXECUTION PHASES
+
+Execute the project in the following order.
+
+### PHASE 0 — FORENSIC CODEBASE AUDIT
+
+Textbook foundation:
+Sommerville; Pressman and Maxim; Clean Architecture.
+
+Activities:
+- Inspect all project files.
+- Inspect dependencies.
+- Inspect database migrations.
+- Inspect backend architecture.
+- Inspect mobile architecture.
+- Inspect LangGraph agents.
+- Inspect security.
+- Execute existing tests.
+- Identify missing features.
+- Identify broken integrations.
+- Identify duplicated code.
+- Establish the actual baseline.
+
+Deliverables:
+- Architecture report.
+- Dependency inventory.
+- Existing ER diagram.
+- Security findings.
+- Test results.
+- Technical debt register.
+- Prioritized remediation plan.
+
+Do not change application code before completing the baseline audit.
+
+### PHASE 1 — REQUIREMENTS AND SYSTEM ARCHITECTURE
+
+Textbook foundation:
+Sommerville; Pressman and Maxim.
+
+Activities:
+- Formal functional requirements.
+- Non-functional requirements.
+- Student use cases.
+- Alumni use cases.
+- Administrator use cases.
+- System context diagram.
+- Component diagram.
+- Deployment diagram.
+- Sequence diagrams.
+- Architecture decision records.
+
+Deliverables:
+- Software Requirements Specification.
+- System architecture document.
+- API design.
+- Database design.
+- User journey documentation.
+- Acceptance criteria.
+
+### PHASE 2 — DATABASE AND BACKEND FOUNDATION
+
+Textbook foundation:
+Elmasri and Navathe; Kleppmann.
+
+Activities:
+- Database schema verification.
+- Relational modelling.
+- Normalization.
+- Repository architecture.
+- Service layer.
+- Transaction management.
+- Async processing.
+- Error handling.
+- API versioning.
+- Database indexing.
+
+Deliverables:
+- Verified database schema.
+- Backend architecture.
+- Migration scripts.
+- API contracts.
+- Integration tests.
+
+### PHASE 3 — IDENTITY AND SECURITY
+
+Textbook foundation:
+Sommerville; Pressman and Maxim; Clean Architecture.
+
+Activities:
+- Student authentication.
+- Alumni authentication.
+- Administrator authentication.
+- Role-based permissions.
+- Alumni verification.
+- RLS policies.
+- Token lifecycle.
+- Session management.
+- Audit logging.
+- Security testing.
+
+Deliverables:
+- Secure identity system.
+- Permission matrix.
+- Authentication tests.
+- Authorization tests.
+- Security assessment.
+
+### PHASE 4 — STUDENT AND ALUMNI ECOSYSTEM
+
+Textbook foundation:
+Pressman and Maxim; Clean Architecture.
+
+Activities:
+- Student dashboard.
+- Alumni dashboard.
+- Alumni directory.
+- Student discovery.
+- Profile management.
+- Search and filtering.
+- Mentor discovery.
+- Career opportunities.
+- Institutional events.
+
+Deliverables:
+- Complete student experience.
+- Complete alumni experience.
+- Verified directory.
+- Tested role-specific interfaces.
+
+### PHASE 5 — MENTORSHIP AND MEETING SCHEDULING
+
+Textbook foundation:
+Elmasri and Navathe; Kleppmann.
+
+Activities:
+- Mentorship requests.
+- Meeting requests.
+- Alumni acceptance and rejection.
+- Alternative time proposals.
+- Availability management.
+- Time-zone support.
+- Double-booking protection.
+- Calendar integration.
+- Reminders.
+
+Deliverables:
+- Complete request lifecycle.
+- Scheduling engine.
+- Notification integration.
+- Concurrency tests.
+
+### PHASE 6 — REAL-TIME MESSAGING
+
+Textbook foundation:
+Kurose and Ross; Kleppmann.
+
+Activities:
+- Private conversations.
+- WebSocket or suitable real-time transport.
+- Message persistence.
+- Delivery and read receipts.
+- Typing indicators.
+- Presence.
+- Attachments.
+- Notifications.
+- Blocking and reporting.
+
+Deliverables:
+- Secure chat system.
+- Conversation APIs.
+- Mobile chat interfaces.
+- Reconnection and load tests.
+
+### PHASE 7 — AUDIO, VIDEO AND SCREEN SHARING
+
+Textbook foundation:
+Kurose and Ross; WebRTC for the Curious.
+
+Activities:
+- Evaluate LiveKit and mediasoup.
+- Implement secure signalling.
+- Integrate SFU.
+- Configure STUN/TURN.
+- Audio and video.
+- Screen sharing.
+- Participant management.
+- Waiting rooms.
+- In-meeting chat.
+- Network recovery.
+- Meeting access tokens.
+
+Deliverables:
+- Integrated meeting interface.
+- Meeting backend.
+- Secure room management.
+- Multi-participant testing.
+- Network quality testing.
+
+### PHASE 8 — AGENTIC AI AND API PROVIDERS
+
+Textbook foundation:
+Chip Huyen; Kleppmann; Clean Architecture.
+
+Activities:
+- Provider abstraction.
+- Secure API key configuration.
+- LangGraph orchestration.
+- Agent specialization.
+- Tool permissions.
+- Retrieval.
+- Streaming.
+- Memory.
+- Human approval.
+- Evaluation.
+- Usage and cost monitoring.
+
+Deliverables:
+- AI orchestration architecture.
+- Functional agents.
+- Provider management.
+- Agent evaluation suite.
+- AI security assessment.
+
+### PHASE 9 — MOBILE MODERNIZATION AND OFFLINE SUPPORT
+
+Textbook foundation:
+Pressman and Maxim; Silberschatz et al.; Kleppmann.
+
+Activities:
+- Component decomposition.
+- Query caching.
+- Virtualized lists.
+- Image optimization.
+- Local persistence.
+- Synchronization queues.
+- Optimistic updates.
+- Native integrations.
+- Accessibility.
+
+Deliverables:
+- Optimized mobile application.
+- Offline-aware experience.
+- Performance measurements.
+- Device compatibility tests.
+
+### PHASE 10 — TESTING AND QUALITY ENGINEERING
+
+Textbook foundation:
+Sommerville; Pressman and Maxim.
+
+Activities:
+- Unit testing.
+- Integration testing.
+- Contract testing.
+- End-to-end testing.
+- Security testing.
+- Performance testing.
+- Concurrency testing.
+- Mobile device testing.
+- AI evaluation.
+- Regression testing.
+
+Deliverables:
+- Test strategy.
+- Automated test suites.
+- Coverage report.
+- Defect register.
+- Release acceptance report.
+
+### PHASE 11 — DEVOPS AND PRODUCTION DEPLOYMENT
+
+Textbook foundation:
+Sommerville; Kleppmann; Silberschatz et al.
+
+Activities:
+- Docker configuration.
+- CI/CD.
+- Environment separation.
+- Database migrations.
+- Monitoring.
+- Crash reporting.
+- Backups.
+- Disaster recovery.
+- Release signing.
+- EAS production builds.
+- Deployment verification.
+
+Deliverables:
+- Production deployment.
+- Release pipeline.
+- Monitoring dashboard.
+- Recovery documentation.
+- Operational runbook.
+
+### PHASE 12 — CONTINUOUS EVOLUTION
+
+Activities:
+- User feedback.
+- Performance analysis.
+- AI evaluation.
+- Security reviews.
+- Dependency updates.
+- Architecture reviews.
+- Scalability testing.
+- Feature improvements.
+
+Every new feature must follow the established architecture and engineering governance.
+
+## 16. IMPLEMENTATION RULES
+
+These rules are mandatory throughout every phase.
+
+1. Never assume a feature exists because documentation mentions it.
+2. Inspect the actual source code.
+3. Never claim tests passed without executing them.
+4. Never fabricate benchmark results.
+5. Never silently replace working technologies.
+6. Never introduce a dependency without checking compatibility.
+7. Never break existing API contracts without a migration plan.
+8. Never make destructive database changes without explicit approval and backup.
+9. Never invent datasets, credentials, user profiles or institutional information.
+10. Ask the project owner for missing project-specific information.
+11. Preserve existing functionality unless removal is explicitly approved.
+12. Use small, reviewable implementation changes.
+13. Provide complete file paths for every modification.
+14. Explain database migrations and rollback procedures.
+15. Update tests whenever functionality changes.
+16. Run relevant tests after every implementation milestone.
+17. Maintain documentation alongside the code.
+18. Identify unresolved risks honestly.
+19. Do not declare a phase complete until its acceptance criteria pass.
+20. Never confuse a successful local test with production readiness.
+
+## 17. PHASE EXECUTION PROTOCOL
+
+For every phase, follow this exact sequence:
+
+STEP 1 — Inspect existing implementation.
+
+STEP 2 — Identify requirements and gaps.
+
+STEP 3 — Identify governing textbook concepts.
+
+STEP 4 — Design the architecture.
+
+STEP 5 — Present the proposed modifications.
+
+STEP 6 — Implement the approved changes.
+
+STEP 7 — Execute tests.
+
+STEP 8 — Verify integration with previous phases.
+
+STEP 9 — Document results and unresolved risks.
+
+STEP 10 — Obtain phase acceptance before advancing.
+
+Maintain a permanent project state document containing:
+- Completed phases.
+- Pending phases.
+- Changed files.
+- Database migrations.
+- API contracts.
+- Test results.
+- Architecture decisions.
+- Known defects.
+- Security risks.
+- Next execution steps.
+
+## 18. FINAL ACCEPTANCE CRITERIA
+
+MSGI One must not be declared production-ready until:
+
+- Student and alumni login work independently.
+- Role-based access is verified.
+- Alumni discovery works.
+- Students can request mentorship.
+- Alumni can manage student requests.
+- Meetings can be scheduled without conflicting bookings.
+- Messaging works reliably.
+- Audio/video meetings work.
+- Screen sharing works with appropriate permissions.
+- Meeting rooms are securely protected.
+- AI agents work through secured API providers.
+- API keys are never exposed to the mobile client.
+- AI responses are evaluated.
+- Database integrity is verified.
+- Mobile performance is measured.
+- Security testing is completed.
+- CI/CD is functional.
+- Monitoring and recovery procedures are tested.
+- All critical integration and regression tests pass.
+
+Production readiness must be demonstrated by evidence, not claimed.
+
+## 19. INITIAL COMMAND
+
+Begin with PHASE 0 ONLY.
+
+Do not immediately implement all features.
+
+First inspect the complete MSGI One project, establish the actual engineering baseline and produce a forensic report.
+
+Then prepare the complete phase dependency map, textbook-to-phase traceability matrix, implementation plan and acceptance criteria.
+
+Preserve the existing working system.
+
+Ask for any missing project-specific information rather than inventing it.
+
+Your mission is to engineer MSGI One as a coherent, secure, scalable, maintainable, agentic AI-powered student–alumni ecosystem using disciplined international software engineering principles.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-11-24T22:45:55+05:30.
+
+The user's current state is as follows:
+Active Document: c:\Users\dharneesh\OneDrive\Documents\msgi-one\apps\mobile\eas.json (LANGUAGE_UNSPECIFIED)
+Cursor is on line: 1
+Other open documents:
+- c:\Users\dharneesh\OneDrive\Documents\msgi-one\docs\THREE_DAY_ROADMAP.md (LANGUAGE_UNSPECIFIED)
+- c:\Users\dharneesh\OneDrive\Documents\msgi-one\services\api\tests\test_phase_5_qa_e2e.py (LANGUAGE_UNSPECIFIED)
+- c:\Users\dharneesh\OneDrive\Documents\msgi-one\docs\phase7\15A_phase7_release_evidence_correction_addendum.md (LANGUAGE_UNSPECIFIED)
+- c:\Users\dharneesh\OneDrive\Documents\msgi-one\services\api\tests\test_ai_security_and_costs.py (LANGUAGE_UNSPECIFIED)
+- c:\Users\dharneesh\OneDrive\Documents\msgi-one\docs\phase7\15_phase7_final_audit.md (LANGUAGE_UNSPECIFIED)
+</ADDITIONAL_METADATA>

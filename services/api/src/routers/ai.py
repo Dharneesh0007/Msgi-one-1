@@ -105,6 +105,11 @@ def get_workflow_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"code": "WORKFLOW_NOT_FOUND", "message": f"Session '{session_id}' not found."},
         )
+    if run.get("user_id") != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "PERMISSION_DENIED", "message": "Cannot access a workflow session owned by another user."},
+        )
     return StandardEnvelope[dict](
         status="success",
         data=run,

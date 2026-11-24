@@ -1,8 +1,9 @@
 """
-MSGI One — Asynchronous Repositories & PostgreSQL Persistence Integration Tests (Gate 6.5)
-Principle: Abraham Silberschatz (Relational Operations) & Martin Fowler (Repository Pattern).
-Validates typed async CRUD interfaces, query AST generation, 38-table schema metadata,
-foreign key cascade rules, unique/check constraints, and coroutine execution contracts.
+MSGI One — Asynchronous Repositories & Declarative Schema Structural Unit Tests (Gate 6.1 / Gate 6.5 Structural Baseline)
+Reclassified per Executive Engineering Directive v2.0 as structural/unit tests.
+Validates SQLAlchemy 2.0 metadata, ORM model registration, repository class bindings,
+foreign key cascade declarations, constraint definitions, coroutine signatures, and SQL AST compilation.
+NOTE: Real database-backed asynchronous execution tests against live PostgreSQL are located in test_postgres_live_integration.py.
 """
 
 import inspect

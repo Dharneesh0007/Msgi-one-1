@@ -11,6 +11,7 @@ import uuid
 from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from pgvector.sqlalchemy import Vector
 from src.db.models.base import Base
 
 
@@ -74,6 +75,7 @@ class AlumniProfile(Base):
     current_company: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
     current_title: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
     industry: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    embedding: Mapped[Optional[List[float]]] = mapped_column(Vector(1536), nullable=True)
     visibility: Mapped[str] = mapped_column(String(30), default="institutional", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)

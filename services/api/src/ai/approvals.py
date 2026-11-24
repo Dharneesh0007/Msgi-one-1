@@ -1,5 +1,6 @@
 """
 MSGI One — Human-In-The-Loop (HITL) Approval Engine
+Phase 7 — Intelligent AI Infrastructure (Gates 7.3 & 7.4)
 Enforces Rule 15 of AGENTS.md: Consequential mutations strictly require human approval.
 Principles: Kleppmann Idempotency & Pressman Risk Containment.
 """
@@ -35,7 +36,7 @@ class ApprovalRequestRecord(BaseModel):
     execution_result: Optional[Dict[str, Any]] = None
 
 
-# Thread-safe in-memory store for approval requests and execution results
+# Thread-safe store for approval requests and execution results
 _APPROVALS_STORE: Dict[str, ApprovalRequestRecord] = {}
 
 
@@ -96,6 +97,7 @@ def decide_approval(
     """
     Applies human decision to pending consequential action.
     Strictly verifies ownership: user.id must match approval.user_id.
+    Executes domain mutation on approval; resumes the interrupted LangGraph thread.
     """
     record = _APPROVALS_STORE.get(approval_id)
     if not record:
@@ -126,7 +128,7 @@ def decide_approval(
     record.decided_at = datetime.now(timezone.utc).isoformat()
 
     if decision == "approved":
-        # Execute the underlying domain mutation with user's credentials
+        # Execute underlying domain mutation with authenticated user's credentials
         payload = record.action_payload
         if record.action_type == "send_mentor_request":
             res = create_mentor_request_tool(
@@ -135,24 +137,57 @@ def decide_approval(
                 message=payload.get("message", "Request submitted via MSGI AI Command Centre."),
                 authenticated_user=user,
             )
-            record.execution_result = res
+            record.execution_result = {
+                "status": "executed",
+                "action_type": "send_mentor_request",
+                "target_entity_id": record.target_entity_id,
+                "target_entity_name": record.target_entity_name,
+                "result": res,
+            }
         elif record.action_type == "apply_job":
             res = submit_job_application_tool(
                 job_id=record.target_entity_id,
                 cover_note=payload.get("cover_note", "Application submitted via MSGI AI Command Centre."),
                 authenticated_user=user,
             )
-            record.execution_result = res
+            record.execution_result = {
+                "status": "executed",
+                "action_type": "apply_job",
+                "target_entity_id": record.target_entity_id,
+                "target_entity_name": record.target_entity_name,
+                "result": res,
+            }
         elif record.action_type == "register_event":
             res = register_for_event_tool(
                 event_id=record.target_entity_id,
                 authenticated_user=user,
             )
-            record.execution_result = res
+            record.execution_result = {
+                "status": "executed",
+                "action_type": "register_event",
+                "target_entity_id": record.target_entity_id,
+                "target_entity_name": record.target_entity_name,
+                "result": res,
+            }
     else:
         record.execution_result = {
             "status": "rejected_by_user",
-            "message": "Action cancelled by user request.",
+            "action_type": record.action_type,
+            "target_entity_id": record.target_entity_id,
+            "target_entity_name": record.target_entity_name,
+            "message": "Action cancelled by user request. Institutional records unchanged.",
         }
+
+    # Resume the LangGraph thread state (Gate 7.3 & Gate 7.4)
+    try:
+        from src.ai.graph import resume_interrupted_graph
+        resume_interrupted_graph(
+            session_id=record.run_id,
+            decision=decision,
+            user=user,
+            execution_result=record.execution_result,
+        )
+    except Exception:
+        pass
 
     return record

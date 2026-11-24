@@ -1,23 +1,18 @@
 """
 MSGI One — LangGraph Master Orchestrator Graph
-Assembles Supervisor, Domain Agents, Synthesizer, and Checkpointer.
+Phase 7 — Intelligent AI Infrastructure (Gates 7.3 & 7.4)
+Assembles Supervisor, Domain Agents, Synthesizer, Checkpointer, and Multi-Tenant Thread Registry.
 Principles: Kleppmann Fault Tolerance & Pressman Process Management.
 """
 
 import os
-import sqlite3
 import time
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.base import BaseCheckpointSaver
-from langgraph.checkpoint.memory import MemorySaver
-
-try:
-    from langgraph.checkpoint.sqlite import SqliteSaver
-except ImportError:
-    SqliteSaver = None
 
 from src.ai.state import CommandCentreState
 from src.ai.agents.supervisor import supervisor_node
@@ -26,6 +21,10 @@ from src.ai.agents.career import career_agent_node
 from src.ai.agents.learning import learning_agent_node
 from src.ai.agents.mentorship import mentorship_agent_node
 from src.ai.agents.events import events_agent_node
+from src.ai.checkpoint import thread_registry, get_sync_checkpointer
+from src.ai.provider import provider, verify_source_citations
+from src.ai.rag import evaluate_grounding, sanitize_retrieved_content, INSUFFICIENT_EVIDENCE_REFUSAL
+from src.ai.observability import global_circuit_breaker, global_budget_manager, calculate_request_cost
 from src.core.dependencies import AuthenticatedUser
 
 
@@ -36,6 +35,7 @@ _AGENT_RUNS_STORE: Dict[str, Dict[str, Any]] = {}
 def synthesizer_node(state: CommandCentreState) -> CommandCentreState:
     """
     Synthesizes domain outputs into a structured executive brief grounded in verified evidence.
+    Executes algorithmic citation verification against retrieved entity identifiers.
     """
     if state.get("status") == "interrupted":
         pending = state.get("pending_approval") or {}
@@ -92,6 +92,31 @@ def synthesizer_node(state: CommandCentreState) -> CommandCentreState:
     else:
         state["final_summary"] = " ".join(parts)
 
+    # Citation Verification against known domain entity identifiers
+    candidate_citations: List[str] = []
+    for m in (state.get("recommended_mentors") or []):
+        if m.get("id"): candidate_citations.append(str(m["id"]))
+        if m.get("mentor_id"): candidate_citations.append(str(m["mentor_id"]))
+    for j in (state.get("recommended_jobs") or []):
+        if j.get("id"): candidate_citations.append(str(j["id"]))
+    for e in (state.get("recommended_events") or []):
+        if e.get("id"): candidate_citations.append(str(e["id"]))
+    for a in (state.get("alumni_matches") or []):
+        if a.get("id"): candidate_citations.append(str(a["id"]))
+
+    evidence = state.get("evidence", [])
+    validated = verify_source_citations(candidate_citations, evidence)
+
+    # If retrieved_docs are present, run multi-tier factual grounding
+    retrieved = state.get("retrieved_docs")
+    if retrieved:
+        grounding_result = evaluate_grounding(parts, retrieved, query=state.get("prompt", ""))
+        state["validated_citations"] = grounding_result.verified_citations
+        if grounding_result.insufficient_evidence and not parts:
+            state["final_summary"] = INSUFFICIENT_EVIDENCE_REFUSAL
+    else:
+        state["validated_citations"] = validated
+
     state["status"] = "completed"
     return state
 
@@ -110,38 +135,6 @@ def route_supervisor(state: CommandCentreState) -> str:
         return "events_agent"
     # Default: multi-agent orchestrator
     return "career_agent"
-
-
-def get_default_checkpointer() -> BaseCheckpointSaver:
-    """
-    Returns appropriate durable checkpointer:
-    - PostgresSaver when LANGGRAPH_CHECKPOINT_MODE=postgres and DATABASE_URL is configured
-    - SqliteSaver when LANGGRAPH_CHECKPOINT_MODE=sqlite (durable, survives API process restarts)
-    - MemorySaver when LANGGRAPH_CHECKPOINT_MODE=memory (for fast ephemeral unit testing)
-    """
-    mode = os.getenv("LANGGRAPH_CHECKPOINT_MODE", "sqlite").lower()
-    if mode == "postgres":
-        db_url = os.getenv("LANGGRAPH_CHECKPOINT_DB_URL") or os.getenv("DATABASE_URL")
-        if db_url:
-            try:
-                from langgraph.checkpoint.postgres import PostgresSaver
-                saver = PostgresSaver.from_conn_string(db_url)
-                saver.setup()
-                return saver
-            except Exception:
-                pass
-    
-    # Durable SQLite checkpointer (persists across API process restarts)
-    if mode in ("postgres", "sqlite") and SqliteSaver is not None:
-        try:
-            db_path = Path(__file__).resolve().parent.parent.parent / "checkpoints.sqlite"
-            conn = sqlite3.connect(str(db_path), check_same_thread=False)
-            saver = SqliteSaver(conn)
-            saver.setup()
-            return saver
-        except Exception:
-            pass
-    return MemorySaver()
 
 
 def build_command_centre_graph(checkpointer: Optional[BaseCheckpointSaver] = None):
@@ -207,7 +200,7 @@ def build_command_centre_graph(checkpointer: Optional[BaseCheckpointSaver] = Non
     builder.add_edge("synthesizer", END)
 
     if checkpointer is None:
-        checkpointer = get_default_checkpointer()
+        checkpointer = get_sync_checkpointer()
     return builder.compile(checkpointer=checkpointer)
 
 
@@ -215,24 +208,122 @@ def build_command_centre_graph(checkpointer: Optional[BaseCheckpointSaver] = Non
 command_centre_graph = build_command_centre_graph()
 
 
+def resume_interrupted_graph(
+    session_id: str,
+    decision: str,  # 'approved' or 'rejected'
+    user: AuthenticatedUser,
+    execution_result: Optional[Dict[str, Any]] = None,
+) -> CommandCentreState:
+    """
+    Resumes an interrupted LangGraph state upon human decision (Gate 7.3 & Gate 7.4).
+    Enforces multi-tenant thread validation: user must be the registered owner.
+    Updates checkpoint state, sets status to 'completed', and runs final synthesis.
+    """
+    thread_registry.register_or_verify(session_id, user.id)
+    config = {"configurable": {"thread_id": session_id}}
+
+    # Load current checkpoint state
+    snapshot = command_centre_graph.get_state(config)
+    if snapshot and snapshot.values:
+        state = dict(snapshot.values)
+    else:
+        run_data = _AGENT_RUNS_STORE.get(session_id, {})
+        state = {
+            "session_id": session_id,
+            "user_id": user.id,
+            "user_roles": user.roles,
+            "user_email": user.email,
+            "thread_owner_id": user.id,
+            "prompt": run_data.get("prompt_summary", "Resumed approval action"),
+            "intent": "orchestrator",
+            "status": "completed",
+            "completed_actions": [],
+            "action_logs": [],
+            "evidence": [],
+            "total_tokens": 50,
+            "latency_ms": 10,
+        }
+
+    state["approval_status"] = decision
+    state["pending_approval"] = None
+    state["status"] = "completed"
+
+    if decision == "approved":
+        if execution_result:
+            completed = list(state.get("completed_actions", []))
+            completed.append(execution_result)
+            state["completed_actions"] = completed
+
+        target_name = (execution_result or {}).get("target_entity_name") or "target resource"
+        action_type = (execution_result or {}).get("action_type") or "action"
+        state["final_summary"] = (
+            f"Human Approval Confirmed: The requested '{action_type}' for '{target_name}' has been "
+            f"successfully executed under verified identity {user.email}. Institutional records updated."
+        )
+    else:
+        state["final_summary"] = (
+            "Action Cancelled: The pending consequential action was rejected by the user. "
+            "Institutional records remain completely unchanged per MSGI Rule 15."
+        )
+
+    # Persist updated state to checkpointer
+    try:
+        command_centre_graph.update_state(config, state)
+    except Exception:
+        pass
+
+    # Update in-memory audit store
+    if session_id in _AGENT_RUNS_STORE:
+        _AGENT_RUNS_STORE[session_id]["status"] = "completed"
+        _AGENT_RUNS_STORE[session_id]["final_summary"] = state["final_summary"]
+
+    return state
+
+
 def run_command_centre(
     prompt: str,
     user: AuthenticatedUser,
     session_id: Optional[str] = None,
 ) -> CommandCentreState:
+    """
+    Executes command centre query synchronously.
+    Enforces multi-tenant thread ownership validation via thread_registry.
+    """
     start_time = time.time()
     sid = session_id or f"sess-{uuid.uuid4().hex[:12]}"
+
+    # Multi-tenant thread isolation check (Gate 7.4)
+    thread_registry.register_or_verify(sid, user.id)
+
+    # Circuit breaker check (Gate 7.8)
+    if not global_circuit_breaker.can_execute():
+        elapsed_ms = int((time.time() - start_time) * 1000)
+        return {
+            "session_id": sid,
+            "user_id": user.id,
+            "user_roles": user.roles,
+            "user_email": user.email,
+            "thread_owner_id": user.id,
+            "prompt": prompt,
+            "status": "failed",
+            "error": "CIRCUIT_BREAKER_OPEN",
+            "final_summary": "Service Temporarily Degraded: External AI provider is currently unavailable. Circuit breaker open.",
+            "latency_ms": elapsed_ms,
+            "total_tokens": 0,
+        }
 
     initial_state: CommandCentreState = {
         "session_id": sid,
         "user_id": user.id,
         "user_roles": user.roles,
         "user_email": user.email,
+        "thread_owner_id": user.id,
         "prompt": prompt,
         "status": "running",
         "action_logs": [],
         "completed_actions": [],
         "evidence": [],
+        "validated_citations": [],
         "total_tokens": max(len(prompt.split()) * 4, 12),
         "latency_ms": 0,
     }
@@ -274,6 +365,9 @@ def run_command_centre(
 
     elapsed_ms = int((time.time() - start_time) * 1000)
     result_state["latency_ms"] = elapsed_ms
+    tokens = result_state.get("total_tokens", 0)
+    global_budget_manager.record_user_usage(user.id, tokens)
+    estimated_cost = calculate_request_cost(tokens // 2, tokens // 2)
 
     # Audit log in-memory
     _AGENT_RUNS_STORE[sid] = {
@@ -282,8 +376,20 @@ def run_command_centre(
         "prompt_summary": prompt[:100],
         "status": result_state.get("status", "completed"),
         "latency_ms": elapsed_ms,
-        "tokens": result_state.get("total_tokens", 0),
+        "tokens": tokens,
+        "estimated_cost_usd": estimated_cost,
         "final_summary": result_state.get("final_summary", ""),
     }
 
     return result_state
+
+
+async def arun_command_centre(
+    prompt: str,
+    user: AuthenticatedUser,
+    session_id: Optional[str] = None,
+) -> CommandCentreState:
+    """
+    Executes command centre query asynchronously.
+    """
+    return run_command_centre(prompt=prompt, user=user, session_id=session_id)
